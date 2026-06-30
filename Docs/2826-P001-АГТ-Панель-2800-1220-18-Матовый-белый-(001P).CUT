@@ -1,0 +1,121 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<AutoCut ver="100">
+  <Project Name="2826" CutTime="999.99" Selected="-1" ApplictionVer="1.0.0" Update="11:08:49 30.12.99">
+    <Data Class="3" TotalUnit="1000000" Type="P001 АГТ Панель 2800*1220*18 Матовый белый (001P)" Ply="18" Grain="False">
+      <Objective>
+        <Shape X="160.4" Y="491.4" Turn="False" NestGap="4.4" Count="1" Name="11" lableqry="1" F1="D:\работа\Июнь\2826\labels\2826-P001-АГТ-Панель-2800-1220-18-Матовый-белый-(001P)\label1.bmp" FH="18"/>
+        <Shape X="161.4" Y="491.4" Turn="False" NestGap="4.4" Count="1" Name="10" lableqry="1" F1="D:\работа\Июнь\2826\labels\2826-P001-АГТ-Панель-2800-1220-18-Матовый-белый-(001P)\label2.bmp" FH="18"/>
+        <Shape X="325.4" Y="491.4" Turn="False" NestGap="4.4" Count="1" Name="9" lableqry="1" F1="D:\работа\Июнь\2826\labels\2826-P001-АГТ-Панель-2800-1220-18-Матовый-белый-(001P)\label3.bmp" FH="18"/>
+        <Shape X="346.4" Y="503.4" Turn="False" NestGap="4.4" Count="1" Name="2" lableqry="1" F1="D:\работа\Июнь\2826\labels\2826-P001-АГТ-Панель-2800-1220-18-Матовый-белый-(001P)\label4.bmp" FH="18"/>
+        <Shape X="89.4" Y="549.4" Turn="False" NestGap="4.4" Count="1" Name="21" lableqry="1" F1="D:\работа\Июнь\2826\labels\2826-P001-АГТ-Панель-2800-1220-18-Матовый-белый-(001P)\label5.bmp" FH="18"/>
+        <Shape X="276.4" Y="681.4" Turn="False" NestGap="4.4" Count="1" Name="14" lableqry="1" F1="D:\работа\Июнь\2826\labels\2826-P001-АГТ-Панель-2800-1220-18-Матовый-белый-(001P)\label6.bmp" FH="18"/>
+        <Shape X="396.4" Y="716.4" Turn="False" NestGap="4.4" Count="1" Name="7" lableqry="1" F1="D:\работа\Июнь\2826\labels\2826-P001-АГТ-Панель-2800-1220-18-Матовый-белый-(001P)\label7.bmp" FH="18"/>
+        <Shape X="491.4" Y="716.4" Turn="False" NestGap="4.4" Count="1" Name="5" lableqry="1" F1="D:\работа\Июнь\2826\labels\2826-P001-АГТ-Панель-2800-1220-18-Матовый-белый-(001P)\label8.bmp" FH="18"/>
+        <Shape X="196.4" Y="681.4" Turn="False" NestGap="4.4" Count="1" Name="15" lableqry="1" F1="D:\работа\Июнь\2826\labels\2826-P001-АГТ-Панель-2800-1220-18-Матовый-белый-(001P)\label9.bmp" FH="18"/>
+        <Shape X="491.4" Y="681.4" Turn="False" NestGap="4.4" Count="1" Name="12" lableqry="1" F1="D:\работа\Июнь\2826\labels\2826-P001-АГТ-Панель-2800-1220-18-Матовый-белый-(001P)\label10.bmp" FH="18"/>
+        <Shape X="503.4" Y="716.4" Turn="False" NestGap="4.4" Count="1" Name="6" lableqry="1" F1="D:\работа\Июнь\2826\labels\2826-P001-АГТ-Панель-2800-1220-18-Матовый-белый-(001P)\label11.bmp" FH="18"/>
+        <Shape X="346.4" Y="680.4" Turn="False" NestGap="4.4" Count="1" Name="4" lableqry="1" F1="D:\работа\Июнь\2826\labels\2826-P001-АГТ-Панель-2800-1220-18-Матовый-белый-(001P)\label12.bmp" FH="18"/>
+        <Shape X="338.4" Y="716.4" Turn="False" NestGap="4.4" Count="1" Name="8" lableqry="1" F1="D:\работа\Июнь\2826\labels\2826-P001-АГТ-Панель-2800-1220-18-Матовый-белый-(001P)\label13.bmp" FH="18"/>
+        <Shape X="491.4" Y="716.4" Turn="False" NestGap="4.4" Count="1" Name="5" lableqry="1" F1="D:\работа\Июнь\2826\labels\2826-P001-АГТ-Панель-2800-1220-18-Матовый-белый-(001P)\label14.bmp" FH="18"/>
+        <Shape X="113.4" Y="596.4" Turn="False" NestGap="4.4" Count="1" Name="16" lableqry="1" F1="D:\работа\Июнь\2826\labels\2826-P001-АГТ-Панель-2800-1220-18-Матовый-белый-(001P)\label15.bmp" FH="18"/>
+        <Shape X="376.4" Y="651.4" Turn="False" NestGap="4.4" Count="1" Name="18" lableqry="1" F1="D:\работа\Июнь\2826\labels\2826-P001-АГТ-Панель-2800-1220-18-Матовый-белый-(001P)\label16.bmp" FH="18"/>
+        <Shape X="325.4" Y="680.4" Turn="False" NestGap="4.4" Count="1" Name="17" lableqry="1" F1="D:\работа\Июнь\2826\labels\2826-P001-АГТ-Панель-2800-1220-18-Матовый-белый-(001P)\label17.bmp" FH="18"/>
+        <Shape X="325.4" Y="680.4" Turn="False" NestGap="4.4" Count="1" Name="17" lableqry="1" F1="D:\работа\Июнь\2826\labels\2826-P001-АГТ-Панель-2800-1220-18-Матовый-белый-(001P)\label18.bmp" FH="18"/>
+        <Shape X="681.4" Y="58" Turn="False" NestGap="4.4" Count="1" Name="13" lableqry="1" F1="D:\работа\Июнь\2826\labels\2826-P001-АГТ-Панель-2800-1220-18-Матовый-белый-(001P)\label19.bmp" FH="18"/>
+        <Shape X="716.4" Y="396.4" Turn="False" NestGap="4.4" Count="1" Name="7" lableqry="1" F1="D:\работа\Июнь\2826\labels\2826-P001-АГТ-Панель-2800-1220-18-Матовый-белый-(001P)\label20.bmp" FH="18"/>
+        <Shape X="338.4" Y="716.4" Turn="False" NestGap="4.4" Count="1" Name="8" lableqry="1" F1="D:\работа\Июнь\2826\labels\2826-P001-АГТ-Панель-2800-1220-18-Матовый-белый-(001P)\label21.bmp" FH="18"/>
+        <Shape X="346.4" Y="796.4" Turn="False" NestGap="4.4" Count="1" Name="3" lableqry="1" F1="D:\работа\Июнь\2826\labels\2826-P001-АГТ-Панель-2800-1220-18-Матовый-белый-(001P)\label22.bmp" FH="18"/>
+        <Shape X="346.4" Y="896.4" Turn="False" NestGap="4.4" Count="1" Name="1" lableqry="1" F1="D:\работа\Июнь\2826\labels\2826-P001-АГТ-Панель-2800-1220-18-Матовый-белый-(001P)\label23.bmp" FH="18"/>
+        <Shape X="1059.4" Y="89.4" Turn="False" NestGap="4.4" Count="1" Name="20" lableqry="1" F1="D:\работа\Июнь\2826\labels\2826-P001-АГТ-Панель-2800-1220-18-Матовый-белый-(001P)\label24.bmp" FH="18"/>
+        <Shape X="1069.4" Y="372.4" Turn="False" NestGap="4.4" Count="1" Name="22" lableqry="1" F1="D:\работа\Июнь\2826\labels\2826-P001-АГТ-Панель-2800-1220-18-Матовый-белый-(001P)\label25.bmp" FH="18"/>
+        <Shape X="89.4" Y="1849.4" Turn="False" NestGap="4.4" Count="1" Name="19" lableqry="1" F1="D:\работа\Июнь\2826\labels\2826-P001-АГТ-Панель-2800-1220-18-Матовый-белый-(001P)\label26.bmp" FH="18"/>
+      </Objective>
+      <Condition Type="Shape" Count="2">
+        <Shape Name="" X="1220" Y="2800" Turn="True" Sx="15" Sy="10" Count="99999"/>
+        <Shape Name="" X="1220" Y="2800" Turn="True" Sx="15" Sy="10" Count="99999"/>
+      </Condition>
+      <Solutions Selected="0">
+        <Solution SolverName="BAZIS-Cutting v2025.12.25.0 date:25.12.2025" SheetCounts="2" SolveGap="4.4">
+          <Layouts>
+            <Layout ID="0" SheetID="0" Count="1" Cut="False" X="1220" Y="2800">
+              <Part X="1220" Y="549.4" Px="0" Py="2177.4">
+                <Part X="160.4" Y="549.4" Px="950.2" Py="2177.4">
+                  <Part X="160.4" Y="491.4" Px="950.2" Py="2177.4" Turn="False" Layer="3" UID="0"/>
+                </Part>
+                <Part X="161.4" Y="549.4" Px="784.4" Py="2177.4">
+                  <Part X="161.4" Y="491.4" Px="784.4" Py="2177.4" Turn="False" Layer="3" UID="1"/>
+                </Part>
+                <Part X="325.4" Y="549.4" Px="454.6" Py="2177.4">
+                  <Part X="325.4" Y="491.4" Px="454.6" Py="2177.4" Turn="False" Layer="3" UID="2"/>
+                </Part>
+                <Part X="346.4" Y="549.4" Px="103.8" Py="2177.4">
+                  <Part X="346.4" Y="503.4" Px="103.8" Py="2177.4" Turn="False" Layer="3" UID="3"/>
+                </Part>
+                <Part X="89.4" Y="549.4" Px="10" Py="2177.4" Turn="False" Layer="2" UID="4"/>
+              </Part>
+              <Part X="1220" Y="716.4" Px="0" Py="1456.6">
+                <Part X="276.4" Y="716.4" Px="906.6" Py="1456.6">
+                  <Part X="276.4" Y="681.4" Px="906.6" Py="1456.6" Turn="False" Layer="3" UID="5"/>
+                </Part>
+                <Part X="396.4" Y="716.4" Px="505.8" Py="1456.6" Turn="False" Layer="2" UID="6"/>
+                <Part X="491.4" Y="716.4" Px="10" Py="1456.6" Turn="False" Layer="2" UID="7"/>
+              </Part>
+              <Part X="1220" Y="716.4" Px="0" Py="735.8">
+                <Part X="196.4" Y="716.4" Px="1013.6" Py="735.8">
+                  <Part X="196.4" Y="681.4" Px="1013.6" Py="735.8" Turn="False" Layer="3" UID="8"/>
+                </Part>
+                <Part X="491.4" Y="716.4" Px="517.8" Py="735.8">
+                  <Part X="491.4" Y="681.4" Px="517.8" Py="735.8" Turn="False" Layer="3" UID="9"/>
+                </Part>
+                <Part X="503.4" Y="716.4" Px="10" Py="735.8" Turn="False" Layer="2" UID="10"/>
+              </Part>
+              <Part X="1220" Y="716.4" Px="0" Py="15">
+                <Part X="346.4" Y="716.4" Px="848.6" Py="15">
+                  <Part X="346.4" Y="680.4" Px="848.6" Py="15" Turn="False" Layer="3" UID="11"/>
+                </Part>
+                <Part X="338.4" Y="716.4" Px="505.8" Py="15" Turn="False" Layer="2" UID="12"/>
+                <Part X="491.4" Y="716.4" Px="10" Py="15" Turn="False" Layer="2" UID="13"/>
+              </Part>
+            </Layout>
+            <Layout ID="1" SheetID="1" Count="1" Cut="False" X="1220" Y="2800">
+              <Part X="1220" Y="680.4" Px="0" Py="1868.8">
+                <Part X="113.4" Y="680.4" Px="1050.4" Py="1868.8">
+                  <Part X="113.4" Y="596.4" Px="1050.4" Py="1868.8" Turn="False" Layer="3" UID="14"/>
+                </Part>
+                <Part X="376.4" Y="680.4" Px="669.6" Py="1868.8">
+                  <Part X="376.4" Y="651.4" Px="669.6" Py="1868.8" Turn="False" Layer="3" UID="15"/>
+                </Part>
+                <Part X="325.4" Y="680.4" Px="339.8" Py="1868.8" Turn="False" Layer="2" UID="16"/>
+                <Part X="325.4" Y="680.4" Px="10" Py="1868.8" Turn="False" Layer="2" UID="17"/>
+              </Part>
+              <Part X="1220" Y="1849.4" Px="0" Py="15">
+                <Part X="1069.4" Y="1849.4" Px="103.8" Py="15">
+                  <Part X="1069.4" Y="58" Px="103.8" Py="1787.2">
+                    <Part X="681.4" Y="58" Px="103.8" Py="1787.2" Turn="False" Layer="4" UID="18"/>
+                  </Part>
+                  <Part X="1069.4" Y="396.4" Px="103.8" Py="1386.4">
+                    <Part X="716.4" Y="396.4" Px="103.8" Py="1386.4" Turn="False" Layer="4" UID="19"/>
+                  </Part>
+                  <Part X="1069.4" Y="896.4" Px="103.8" Py="485.6">
+                    <Part X="338.4" Y="896.4" Px="805.4" Py="485.6">
+                      <Part X="338.4" Y="716.4" Px="805.4" Py="485.6" Turn="False" Layer="5" UID="20"/>
+                    </Part>
+                    <Part X="346.4" Y="896.4" Px="454.6" Py="485.6">
+                      <Part X="346.4" Y="796.4" Px="454.6" Py="485.6" Turn="False" Layer="5" UID="21"/>
+                    </Part>
+                    <Part X="346.4" Y="896.4" Px="103.8" Py="485.6" Turn="False" Layer="4" UID="22"/>
+                  </Part>
+                  <Part X="1069.4" Y="89.4" Px="103.8" Py="391.8">
+                    <Part X="1059.4" Y="89.4" Px="103.8" Py="391.8" Turn="False" Layer="4" UID="23"/>
+                  </Part>
+                  <Part X="1069.4" Y="372.4" Px="103.8" Py="15" Turn="False" Layer="3" UID="24"/>
+                </Part>
+                <Part X="89.4" Y="1849.4" Px="10" Py="15" Turn="False" Layer="2" UID="25"/>
+              </Part>
+            </Layout>
+          </Layouts>
+        </Solution>
+      </Solutions>
+    </Data>
+  </Project>
+</AutoCut>

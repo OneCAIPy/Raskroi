@@ -1,0 +1,328 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<AutoCut ver="100">
+  <Project Name="4301" CutTime="999.99" Selected="-1" ApplictionVer="1.0.0" Update="11:45:22 30.12.99">
+    <Data Class="3" TotalUnit="1000000" Type="ДСП Кроно 7031 BS Кремовый 2800*2070*16 (7031 BS)" Ply="16" Grain="False">
+      <Objective>
+        <Shape X="459" Y="559.5" Turn="False" NestGap="4.4" Count="1" Name="1" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label1.bmp" FH="16"/>
+        <Shape X="498.5" Y="568" Turn="False" NestGap="4.4" Count="1" Name="4" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label2.bmp" FH="16"/>
+        <Shape X="510.5" Y="568" Turn="False" NestGap="4.4" Count="1" Name="20" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label3.bmp" FH="16"/>
+        <Shape X="558.5" Y="568" Turn="False" NestGap="4.4" Count="1" Name="3" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label4.bmp" FH="16"/>
+        <Shape X="459" Y="559.5" Turn="False" NestGap="4.4" Count="1" Name="1" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label5.bmp" FH="16"/>
+        <Shape X="498.5" Y="568" Turn="False" NestGap="4.4" Count="1" Name="4" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label6.bmp" FH="16"/>
+        <Shape X="558.5" Y="568" Turn="False" NestGap="4.4" Count="1" Name="3" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label7.bmp" FH="16"/>
+        <Shape X="510.5" Y="600" Turn="False" NestGap="4.4" Count="1" Name="17" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label8.bmp" FH="16"/>
+        <Shape X="136" Y="282" Turn="False" NestGap="4.4" Count="1" Name="33" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label9.bmp" FH="16"/>
+        <Shape X="136" Y="282" Turn="False" NestGap="4.4" Count="1" Name="33" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label10.bmp" FH="16"/>
+        <Shape X="509" Y="70.5" Turn="False" NestGap="4.4" Count="1" Name="23" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label11.bmp" FH="16"/>
+        <Shape X="558.5" Y="612" Turn="False" NestGap="4.4" Count="1" Name="2" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label12.bmp" FH="16"/>
+        <Shape X="509" Y="70.5" Turn="False" NestGap="4.4" Count="1" Name="23" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label13.bmp" FH="16"/>
+        <Shape X="558.5" Y="612" Turn="False" NestGap="4.4" Count="1" Name="2" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label14.bmp" FH="16"/>
+        <Shape X="733.5" Y="688" Turn="False" NestGap="4.4" Count="1" Name="37" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label15.bmp" FH="16"/>
+        <Shape X="481" Y="84" Turn="False" NestGap="4.4" Count="1" Name="40" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label16.bmp" FH="16"/>
+        <Shape X="481" Y="84" Turn="False" NestGap="4.4" Count="1" Name="40" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label17.bmp" FH="16"/>
+        <Shape X="510.5" Y="118" Turn="False" NestGap="4.4" Count="1" Name="19" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label18.bmp" FH="16"/>
+        <Shape X="510.5" Y="600.5" Turn="False" NestGap="4.4" Count="1" Name="16" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label19.bmp" FH="16"/>
+        <Shape X="750" Y="900" Turn="False" NestGap="4.4" Count="1" Name="27" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label20.bmp" FH="16"/>
+        <Shape X="750" Y="900" Turn="False" NestGap="4.4" Count="1" Name="27" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label21.bmp" FH="16"/>
+        <Shape X="150" Y="510.5" Turn="False" NestGap="4.4" Count="1" Name="18" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label22.bmp" FH="16"/>
+        <Shape X="459" Y="559.5" Turn="False" NestGap="4.4" Count="1" Name="1" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label23.bmp" FH="16"/>
+        <Shape X="459" Y="559.5" Turn="False" NestGap="4.4" Count="1" Name="1" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label24.bmp" FH="16"/>
+        <Shape X="459" Y="559.5" Turn="False" NestGap="4.4" Count="1" Name="1" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label25.bmp" FH="16"/>
+        <Shape X="459" Y="559.5" Turn="False" NestGap="4.4" Count="1" Name="1" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label26.bmp" FH="16"/>
+        <Shape X="70.5" Y="500" Turn="False" NestGap="4.4" Count="1" Name="22" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label27.bmp" FH="16"/>
+        <Shape X="568" Y="558.5" Turn="False" NestGap="4.4" Count="1" Name="3" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label28.bmp" FH="16"/>
+        <Shape X="459" Y="559.5" Turn="False" NestGap="4.4" Count="1" Name="1" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label29.bmp" FH="16"/>
+        <Shape X="459" Y="559.5" Turn="False" NestGap="4.4" Count="1" Name="1" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label30.bmp" FH="16"/>
+        <Shape X="459" Y="559.5" Turn="False" NestGap="4.4" Count="1" Name="1" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label31.bmp" FH="16"/>
+        <Shape X="510.5" Y="704" Turn="False" NestGap="4.4" Count="1" Name="15" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label32.bmp" FH="16"/>
+        <Shape X="300" Y="750" Turn="False" NestGap="4.4" Count="1" Name="24" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label33.bmp" FH="16"/>
+        <Shape X="600" Y="773.5" Turn="False" NestGap="4.4" Count="1" Name="26" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label34.bmp" FH="16"/>
+        <Shape X="600" Y="773.5" Turn="False" NestGap="4.4" Count="1" Name="26" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label35.bmp" FH="16"/>
+        <Shape X="199" Y="481" Turn="False" NestGap="4.4" Count="1" Name="41" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label36.bmp" FH="16"/>
+        <Shape X="900" Y="862" Turn="False" NestGap="4.4" Count="1" Name="28" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label37.bmp" FH="16"/>
+        <Shape X="900" Y="862" Turn="False" NestGap="4.4" Count="1" Name="28" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label38.bmp" FH="16"/>
+        <Shape X="568" Y="558.5" Turn="False" NestGap="4.4" Count="1" Name="3" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label39.bmp" FH="16"/>
+        <Shape X="330.5" Y="564" Turn="False" NestGap="4.4" Count="1" Name="31" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label40.bmp" FH="16"/>
+        <Shape X="100.5" Y="568" Turn="False" NestGap="4.4" Count="1" Name="21" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label41.bmp" FH="16"/>
+        <Shape X="100.5" Y="568" Turn="False" NestGap="4.4" Count="1" Name="21" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label42.bmp" FH="16"/>
+        <Shape X="100.5" Y="568" Turn="False" NestGap="4.4" Count="1" Name="21" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label43.bmp" FH="16"/>
+        <Shape X="320.5" Y="600.5" Turn="False" NestGap="4.4" Count="1" Name="10" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label44.bmp" FH="16"/>
+        <Shape X="493" Y="626" Turn="False" NestGap="4.4" Count="1" Name="39" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label45.bmp" FH="16"/>
+        <Shape X="250" Y="484.5" Turn="False" NestGap="4.4" Count="1" Name="34" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label46.bmp" FH="16"/>
+        <Shape X="493" Y="626" Turn="False" NestGap="4.4" Count="1" Name="39" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label47.bmp" FH="16"/>
+        <Shape X="500.5" Y="688" Turn="False" NestGap="4.4" Count="1" Name="32" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label48.bmp" FH="16"/>
+        <Shape X="749.5" Y="688" Turn="False" NestGap="4.4" Count="1" Name="36" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label49.bmp" FH="16"/>
+        <Shape X="560.5" Y="688" Turn="False" NestGap="4.4" Count="1" Name="38" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label50.bmp" FH="16"/>
+        <Shape X="733.5" Y="688" Turn="False" NestGap="4.4" Count="1" Name="37" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label51.bmp" FH="16"/>
+        <Shape X="733.5" Y="688" Turn="False" NestGap="4.4" Count="1" Name="37" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label52.bmp" FH="16"/>
+        <Shape X="100.5" Y="568" Turn="False" NestGap="4.4" Count="1" Name="21" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label53.bmp" FH="16"/>
+        <Shape X="580" Y="688" Turn="False" NestGap="4.4" Count="1" Name="30" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label54.bmp" FH="16"/>
+        <Shape X="510.5" Y="704" Turn="False" NestGap="4.4" Count="1" Name="15" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label55.bmp" FH="16"/>
+        <Shape X="510.5" Y="704" Turn="False" NestGap="4.4" Count="1" Name="15" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label56.bmp" FH="16"/>
+        <Shape X="300" Y="750" Turn="False" NestGap="4.4" Count="1" Name="24" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label57.bmp" FH="16"/>
+        <Shape X="252" Y="396.5" Turn="False" NestGap="4.4" Count="1" Name="14" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label58.bmp" FH="16"/>
+        <Shape X="70.5" Y="500" Turn="False" NestGap="4.4" Count="1" Name="22" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label59.bmp" FH="16"/>
+        <Shape X="568" Y="558.5" Turn="False" NestGap="4.4" Count="1" Name="3" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label60.bmp" FH="16"/>
+        <Shape X="459" Y="559.5" Turn="False" NestGap="4.4" Count="1" Name="5" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label61.bmp" FH="16"/>
+        <Shape X="459" Y="559.5" Turn="False" NestGap="4.4" Count="1" Name="5" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label62.bmp" FH="16"/>
+        <Shape X="397.5" Y="518" Turn="False" NestGap="4.4" Count="1" Name="9" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label63.bmp" FH="16"/>
+        <Shape X="398.5" Y="549" Turn="False" NestGap="4.4" Count="1" Name="7" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label64.bmp" FH="16"/>
+        <Shape X="398.5" Y="549" Turn="False" NestGap="4.4" Count="1" Name="7" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label65.bmp" FH="16"/>
+        <Shape X="413" Y="559.5" Turn="False" NestGap="4.4" Count="1" Name="6" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label66.bmp" FH="16"/>
+        <Shape X="413" Y="559.5" Turn="False" NestGap="4.4" Count="1" Name="6" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label67.bmp" FH="16"/>
+        <Shape X="568" Y="558.5" Turn="False" NestGap="4.4" Count="1" Name="3" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label68.bmp" FH="16"/>
+        <Shape X="459" Y="559.5" Turn="False" NestGap="4.4" Count="1" Name="1" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label69.bmp" FH="16"/>
+        <Shape X="498.5" Y="568" Turn="False" NestGap="4.4" Count="1" Name="4" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label70.bmp" FH="16"/>
+        <Shape X="498.5" Y="568" Turn="False" NestGap="4.4" Count="1" Name="4" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label71.bmp" FH="16"/>
+        <Shape X="493" Y="626" Turn="False" NestGap="4.4" Count="1" Name="39" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label72.bmp" FH="16"/>
+        <Shape X="510.5" Y="704" Turn="False" NestGap="4.4" Count="1" Name="15" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label73.bmp" FH="16"/>
+        <Shape X="510.5" Y="704" Turn="False" NestGap="4.4" Count="1" Name="15" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label74.bmp" FH="16"/>
+        <Shape X="510.5" Y="704" Turn="False" NestGap="4.4" Count="1" Name="15" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label75.bmp" FH="16"/>
+        <Shape X="568" Y="100.5" Turn="False" NestGap="4.4" Count="1" Name="21" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label76.bmp" FH="16"/>
+        <Shape X="180" Y="230" Turn="False" NestGap="4.4" Count="1" Name="13" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label77.bmp" FH="16"/>
+        <Shape X="180" Y="230" Turn="False" NestGap="4.4" Count="1" Name="13" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label78.bmp" FH="16"/>
+        <Shape X="398.5" Y="868" Turn="False" NestGap="4.4" Count="1" Name="8" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label79.bmp" FH="16"/>
+        <Shape X="398.5" Y="868" Turn="False" NestGap="4.4" Count="1" Name="8" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label80.bmp" FH="16"/>
+        <Shape X="284" Y="750" Turn="False" NestGap="4.4" Count="1" Name="25" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label81.bmp" FH="16"/>
+        <Shape X="688" Y="868" Turn="False" NestGap="4.4" Count="1" Name="29" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label82.bmp" FH="16"/>
+        <Shape X="201" Y="230" Turn="False" NestGap="4.4" Count="1" Name="12" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label83.bmp" FH="16"/>
+        <Shape X="270" Y="600" Turn="False" NestGap="4.4" Count="1" Name="11" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label84.bmp" FH="16"/>
+        <Shape X="720" Y="884" Turn="False" NestGap="4.4" Count="1" Name="35" lableqry="1" F1="D:\работа\Июнь\4301\labels\4301-ДСП-Кроно-7031-BS-Кремовый-2800-2070-16-(7031-BS)\label85.bmp" FH="16"/>
+      </Objective>
+      <Condition Type="Shape" Count="5">
+        <Shape Name="" X="2070" Y="2800" Turn="True" Sx="15" Sy="15" Count="99999"/>
+        <Shape Name="" X="2070" Y="2800" Turn="True" Sx="15" Sy="15" Count="99999"/>
+        <Shape Name="" X="2070" Y="2800" Turn="True" Sx="15" Sy="15" Count="99999"/>
+        <Shape Name="" X="2070" Y="2800" Turn="True" Sx="15" Sy="15" Count="99999"/>
+        <Shape Name="" X="1030" Y="2800" Turn="True" Sx="15" Sy="15" Count="99999"/>
+      </Condition>
+      <Solutions Selected="0">
+        <Solution SolverName="BAZIS-Cutting v2025.12.25.0 date:25.12.2025" SheetCounts="5" SolveGap="4.4">
+          <Layouts>
+            <Layout ID="0" SheetID="0" Count="1" Cut="False" X="2070" Y="2800">
+              <Part X="2070" Y="568" Px="0" Py="2216.2">
+                <Part X="459" Y="568" Px="1595.7" Py="2216.2">
+                  <Part X="459" Y="559.5" Px="1595.7" Py="2216.2" Turn="False" Layer="3" UID="0"/>
+                </Part>
+                <Part X="498.5" Y="568" Px="1092.8" Py="2216.2" Turn="False" Layer="2" UID="1"/>
+                <Part X="510.5" Y="568" Px="577.9" Py="2216.2" Turn="False" Layer="2" UID="2"/>
+                <Part X="558.5" Y="568" Px="15" Py="2216.2" Turn="False" Layer="2" UID="3"/>
+              </Part>
+              <Part X="2070" Y="600" Px="0" Py="1611.8">
+                <Part X="459" Y="600" Px="1595.7" Py="1611.8">
+                  <Part X="459" Y="559.5" Px="1595.7" Py="1611.8" Turn="False" Layer="3" UID="4"/>
+                </Part>
+                <Part X="498.5" Y="600" Px="1092.8" Py="1611.8">
+                  <Part X="498.5" Y="568" Px="1092.8" Py="1611.8" Turn="False" Layer="3" UID="5"/>
+                </Part>
+                <Part X="558.5" Y="600" Px="529.9" Py="1611.8">
+                  <Part X="558.5" Y="568" Px="529.9" Py="1611.8" Turn="False" Layer="3" UID="6"/>
+                </Part>
+                <Part X="510.5" Y="600" Px="15" Py="1611.8" Turn="False" Layer="2" UID="7"/>
+              </Part>
+              <Part X="2070" Y="688" Px="0" Py="919.4">
+                <Part X="136" Y="688" Px="1878.7" Py="919.4">
+                  <Part X="136" Y="282" Px="1878.7" Py="1205.8" Turn="False" Layer="3" UID="8"/>
+                  <Part X="136" Y="282" Px="1878.7" Py="919.4" Turn="False" Layer="3" UID="9"/>
+                </Part>
+                <Part X="558.5" Y="688" Px="1315.8" Py="919.4">
+                  <Part X="558.5" Y="70.5" Px="1315.8" Py="1535.8">
+                    <Part X="509" Y="70.5" Px="1315.8" Py="1535.8" Turn="False" Layer="4" UID="10"/>
+                  </Part>
+                  <Part X="558.5" Y="612" Px="1315.8" Py="919.4" Turn="False" Layer="3" UID="11"/>
+                </Part>
+                <Part X="558.5" Y="688" Px="752.9" Py="919.4">
+                  <Part X="558.5" Y="70.5" Px="752.9" Py="1535.8">
+                    <Part X="509" Y="70.5" Px="752.9" Py="1535.8" Turn="False" Layer="4" UID="12"/>
+                  </Part>
+                  <Part X="558.5" Y="612" Px="752.9" Py="919.4" Turn="False" Layer="3" UID="13"/>
+                </Part>
+                <Part X="733.5" Y="688" Px="15" Py="919.4" Turn="False" Layer="2" UID="14"/>
+              </Part>
+              <Part X="2070" Y="900" Px="0" Py="15">
+                <Part X="510.5" Y="900" Px="1523.8" Py="15">
+                  <Part X="510.5" Y="84" Px="1523.8" Py="830.7">
+                    <Part X="481" Y="84" Px="1523.8" Py="830.7" Turn="False" Layer="4" UID="15"/>
+                  </Part>
+                  <Part X="510.5" Y="84" Px="1523.8" Py="742.3">
+                    <Part X="481" Y="84" Px="1523.8" Py="742.3" Turn="False" Layer="4" UID="16"/>
+                  </Part>
+                  <Part X="510.5" Y="118" Px="1523.8" Py="619.9" Turn="False" Layer="3" UID="17"/>
+                  <Part X="510.5" Y="600.5" Px="1523.8" Py="15" Turn="False" Layer="3" UID="18"/>
+                </Part>
+                <Part X="750" Y="900" Px="769.4" Py="15" Turn="False" Layer="2" UID="19"/>
+                <Part X="750" Y="900" Px="15" Py="15" Turn="False" Layer="2" UID="20"/>
+              </Part>
+            </Layout>
+            <Layout ID="1" SheetID="1" Count="1" Cut="False" X="2070" Y="2800">
+              <Part X="2070" Y="559.5" Px="0" Py="2223.2">
+                <Part X="150" Y="559.5" Px="1868.6" Py="2223.2">
+                  <Part X="150" Y="510.5" Px="1868.6" Py="2223.2" Turn="False" Layer="3" UID="21"/>
+                </Part>
+                <Part X="459" Y="559.5" Px="1405.2" Py="2223.2" Turn="False" Layer="2" UID="22"/>
+                <Part X="459" Y="559.5" Px="941.8" Py="2223.2" Turn="False" Layer="2" UID="23"/>
+                <Part X="459" Y="559.5" Px="478.4" Py="2223.2" Turn="False" Layer="2" UID="24"/>
+                <Part X="459" Y="559.5" Px="15" Py="2223.2" Turn="False" Layer="2" UID="25"/>
+              </Part>
+              <Part X="2070" Y="559.5" Px="0" Py="1659.3">
+                <Part X="70.5" Y="559.5" Px="1977.6" Py="1659.3">
+                  <Part X="70.5" Y="500" Px="1977.6" Py="1659.3" Turn="False" Layer="3" UID="26"/>
+                </Part>
+                <Part X="568" Y="559.5" Px="1405.2" Py="1659.3">
+                  <Part X="568" Y="558.5" Px="1405.2" Py="1659.3" Turn="False" Layer="3" UID="27"/>
+                </Part>
+                <Part X="459" Y="559.5" Px="941.8" Py="1659.3" Turn="False" Layer="2" UID="28"/>
+                <Part X="459" Y="559.5" Px="478.4" Py="1659.3" Turn="False" Layer="2" UID="29"/>
+                <Part X="459" Y="559.5" Px="15" Py="1659.3" Turn="False" Layer="2" UID="30"/>
+              </Part>
+              <Part X="2070" Y="773.5" Px="0" Py="881.4">
+                <Part X="510.5" Y="773.5" Px="1528.2" Py="881.4">
+                  <Part X="510.5" Y="704" Px="1528.2" Py="881.4" Turn="False" Layer="3" UID="31"/>
+                </Part>
+                <Part X="300" Y="773.5" Px="1223.8" Py="881.4">
+                  <Part X="300" Y="750" Px="1223.8" Py="881.4" Turn="False" Layer="3" UID="32"/>
+                </Part>
+                <Part X="600" Y="773.5" Px="619.4" Py="881.4" Turn="False" Layer="2" UID="33"/>
+                <Part X="600" Y="773.5" Px="15" Py="881.4" Turn="False" Layer="2" UID="34"/>
+              </Part>
+              <Part X="2070" Y="862" Px="0" Py="15">
+                <Part X="199" Y="862" Px="1823.8" Py="15">
+                  <Part X="199" Y="481" Px="1823.8" Py="15" Turn="False" Layer="3" UID="35"/>
+                </Part>
+                <Part X="900" Y="862" Px="919.4" Py="15" Turn="False" Layer="2" UID="36"/>
+                <Part X="900" Y="862" Px="15" Py="15" Turn="False" Layer="2" UID="37"/>
+              </Part>
+            </Layout>
+            <Layout ID="2" SheetID="2" Count="1" Cut="False" X="2070" Y="2800">
+              <Part X="2070" Y="626" Px="0" Py="2154.2">
+                <Part X="568" Y="626" Px="1486.9" Py="2154.2">
+                  <Part X="568" Y="558.5" Px="1486.9" Py="2154.2" Turn="False" Layer="3" UID="38"/>
+                </Part>
+                <Part X="330.5" Y="626" Px="1152" Py="2154.2">
+                  <Part X="330.5" Y="564" Px="1152" Py="2154.2" Turn="False" Layer="3" UID="39"/>
+                </Part>
+                <Part X="100.5" Y="626" Px="1047.1" Py="2154.2">
+                  <Part X="100.5" Y="568" Px="1047.1" Py="2154.2" Turn="False" Layer="3" UID="40"/>
+                </Part>
+                <Part X="100.5" Y="626" Px="942.2" Py="2154.2">
+                  <Part X="100.5" Y="568" Px="942.2" Py="2154.2" Turn="False" Layer="3" UID="41"/>
+                </Part>
+                <Part X="100.5" Y="626" Px="837.3" Py="2154.2">
+                  <Part X="100.5" Y="568" Px="837.3" Py="2154.2" Turn="False" Layer="3" UID="42"/>
+                </Part>
+                <Part X="320.5" Y="626" Px="512.4" Py="2154.2">
+                  <Part X="320.5" Y="600.5" Px="512.4" Py="2154.2" Turn="False" Layer="3" UID="43"/>
+                </Part>
+                <Part X="493" Y="626" Px="15" Py="2154.2" Turn="False" Layer="2" UID="44"/>
+              </Part>
+              <Part X="2070" Y="688" Px="0" Py="1461.8">
+                <Part X="250" Y="688" Px="1771.2" Py="1461.8">
+                  <Part X="250" Y="484.5" Px="1771.2" Py="1461.8" Turn="False" Layer="3" UID="45"/>
+                </Part>
+                <Part X="493" Y="688" Px="1273.8" Py="1461.8">
+                  <Part X="493" Y="626" Px="1273.8" Py="1461.8" Turn="False" Layer="3" UID="46"/>
+                </Part>
+                <Part X="500.5" Y="688" Px="768.9" Py="1461.8" Turn="False" Layer="2" UID="47"/>
+                <Part X="749.5" Y="688" Px="15" Py="1461.8" Turn="False" Layer="2" UID="48"/>
+              </Part>
+              <Part X="2070" Y="688" Px="0" Py="769.4">
+                <Part X="560.5" Y="688" Px="1490.8" Py="769.4" Turn="False" Layer="2" UID="49"/>
+                <Part X="733.5" Y="688" Px="752.9" Py="769.4" Turn="False" Layer="2" UID="50"/>
+                <Part X="733.5" Y="688" Px="15" Py="769.4" Turn="False" Layer="2" UID="51"/>
+              </Part>
+              <Part X="2070" Y="750" Px="0" Py="15">
+                <Part X="100.5" Y="750" Px="1933.6" Py="15">
+                  <Part X="100.5" Y="568" Px="1933.6" Py="15" Turn="False" Layer="3" UID="52"/>
+                </Part>
+                <Part X="580" Y="750" Px="1349.2" Py="15">
+                  <Part X="580" Y="688" Px="1349.2" Py="15" Turn="False" Layer="3" UID="53"/>
+                </Part>
+                <Part X="510.5" Y="750" Px="834.3" Py="15">
+                  <Part X="510.5" Y="704" Px="834.3" Py="15" Turn="False" Layer="3" UID="54"/>
+                </Part>
+                <Part X="510.5" Y="750" Px="319.4" Py="15">
+                  <Part X="510.5" Y="704" Px="319.4" Py="15" Turn="False" Layer="3" UID="55"/>
+                </Part>
+                <Part X="300" Y="750" Px="15" Py="15" Turn="False" Layer="2" UID="56"/>
+              </Part>
+            </Layout>
+            <Layout ID="3" SheetID="3" Count="1" Cut="False" X="2070" Y="2800">
+              <Part X="2070" Y="559.5" Px="0" Py="1859.7">
+                <Part X="252" Y="559.5" Px="1589.1" Py="1859.7">
+                  <Part X="252" Y="396.5" Px="1589.1" Py="1859.7" Turn="False" Layer="3" UID="57"/>
+                </Part>
+                <Part X="70.5" Y="559.5" Px="1514.2" Py="1859.7">
+                  <Part X="70.5" Y="500" Px="1514.2" Py="1859.7" Turn="False" Layer="3" UID="58"/>
+                </Part>
+                <Part X="568" Y="559.5" Px="941.8" Py="1859.7">
+                  <Part X="568" Y="558.5" Px="941.8" Py="1859.7" Turn="False" Layer="3" UID="59"/>
+                </Part>
+                <Part X="459" Y="559.5" Px="478.4" Py="1859.7" Turn="False" Layer="2" UID="60"/>
+                <Part X="459" Y="559.5" Px="15" Py="1859.7" Turn="False" Layer="2" UID="61"/>
+              </Part>
+              <Part X="2070" Y="559.5" Px="0" Py="1295.8">
+                <Part X="397.5" Y="559.5" Px="1655.6" Py="1295.8">
+                  <Part X="397.5" Y="518" Px="1655.6" Py="1295.8" Turn="False" Layer="3" UID="62"/>
+                </Part>
+                <Part X="398.5" Y="559.5" Px="1252.7" Py="1295.8">
+                  <Part X="398.5" Y="549" Px="1252.7" Py="1295.8" Turn="False" Layer="3" UID="63"/>
+                </Part>
+                <Part X="398.5" Y="559.5" Px="849.8" Py="1295.8">
+                  <Part X="398.5" Y="549" Px="849.8" Py="1295.8" Turn="False" Layer="3" UID="64"/>
+                </Part>
+                <Part X="413" Y="559.5" Px="432.4" Py="1295.8" Turn="False" Layer="2" UID="65"/>
+                <Part X="413" Y="559.5" Px="15" Py="1295.8" Turn="False" Layer="2" UID="66"/>
+              </Part>
+              <Part X="2070" Y="568" Px="0" Py="723.4">
+                <Part X="568" Y="568" Px="1484.2" Py="723.4">
+                  <Part X="568" Y="558.5" Px="1484.2" Py="723.4" Turn="False" Layer="3" UID="67"/>
+                </Part>
+                <Part X="459" Y="568" Px="1020.8" Py="723.4">
+                  <Part X="459" Y="559.5" Px="1020.8" Py="723.4" Turn="False" Layer="3" UID="68"/>
+                </Part>
+                <Part X="498.5" Y="568" Px="517.9" Py="723.4" Turn="False" Layer="2" UID="69"/>
+                <Part X="498.5" Y="568" Px="15" Py="723.4" Turn="False" Layer="2" UID="70"/>
+              </Part>
+              <Part X="2070" Y="704" Px="0" Py="15">
+                <Part X="493" Y="704" Px="1559.7" Py="15">
+                  <Part X="493" Y="626" Px="1559.7" Py="15" Turn="False" Layer="3" UID="71"/>
+                </Part>
+                <Part X="510.5" Y="704" Px="1044.8" Py="15" Turn="False" Layer="2" UID="72"/>
+                <Part X="510.5" Y="704" Px="529.9" Py="15" Turn="False" Layer="2" UID="73"/>
+                <Part X="510.5" Y="704" Px="15" Py="15" Turn="False" Layer="2" UID="74"/>
+              </Part>
+            </Layout>
+            <Layout ID="4" SheetID="4" Count="1" Cut="False" X="1030" Y="2800">
+              <Part X="1030" Y="100.5" Px="0" Py="2648.2">
+                <Part X="568" Y="100.5" Px="15" Py="2648.2" Turn="False" Layer="2" UID="75"/>
+              </Part>
+              <Part X="1030" Y="868" Px="0" Py="1775.8">
+                <Part X="180" Y="868" Px="820.8" Py="1775.8">
+                  <Part X="180" Y="230" Px="820.8" Py="2010.2" Turn="False" Layer="3" UID="76"/>
+                  <Part X="180" Y="230" Px="820.8" Py="1775.8" Turn="False" Layer="3" UID="77"/>
+                </Part>
+                <Part X="398.5" Y="868" Px="417.9" Py="1775.8" Turn="False" Layer="2" UID="78"/>
+                <Part X="398.5" Y="868" Px="15" Py="1775.8" Turn="False" Layer="2" UID="79"/>
+              </Part>
+              <Part X="1030" Y="868" Px="0" Py="903.4">
+                <Part X="284" Y="868" Px="707.4" Py="903.4">
+                  <Part X="284" Y="750" Px="707.4" Py="903.4" Turn="False" Layer="3" UID="80"/>
+                </Part>
+                <Part X="688" Y="868" Px="15" Py="903.4" Turn="False" Layer="2" UID="81"/>
+              </Part>
+              <Part X="1030" Y="884" Px="0" Py="15">
+                <Part X="270" Y="884" Px="739.4" Py="15">
+                  <Part X="270" Y="230" Px="739.4" Py="619.4">
+                    <Part X="201" Y="230" Px="739.4" Py="619.4" Turn="False" Layer="4" UID="82"/>
+                  </Part>
+                  <Part X="270" Y="600" Px="739.4" Py="15" Turn="False" Layer="3" UID="83"/>
+                </Part>
+                <Part X="720" Y="884" Px="15" Py="15" Turn="False" Layer="2" UID="84"/>
+              </Part>
+            </Layout>
+          </Layouts>
+        </Solution>
+      </Solutions>
+    </Data>
+  </Project>
+</AutoCut>
