@@ -24,3 +24,27 @@ def test_edge_on_w_sides_reduces_l_dimension():
 	assert sizes.no_edge_w_mm == 397
 	assert sizes.blank_w_mm == 397
 	assert sizes.cutting_w_mm == 397
+	
+
+def test_edge_on_l_sides_reduces_w_dimension():
+	part = PartInput(
+		number="2",
+		name="Боковина",
+		l_mm=800,
+		w_mm=400,
+		quantity=1,
+		edges=EdgeSet(
+			L1=EdgeSpec(thickness_mm=2, trimming_allowance_mm=0.5),
+			L2=EdgeSpec(thickness_mm=2, trimming_allowance_mm=0.5),
+		),
+	)
+
+	sizes = calculate_part_sizes(part)
+
+	assert sizes.no_edge_l_mm == 800
+	assert sizes.blank_l_mm == 800
+	assert sizes.cutting_l_mm == 800
+
+	assert sizes.no_edge_w_mm == 396
+	assert sizes.blank_w_mm == 397
+	assert sizes.cutting_w_mm == 397
