@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 
 from cutting_app.app.domain.cut_tree import CutDirection, CutNode, RectArea
+from cutting_app.app.domain.edge import EdgeSet
 from cutting_app.app.domain.placement import Rotation
 
 
@@ -15,6 +16,7 @@ class PlacedPart:
 	width_mm: float
 	height_mm: float
 	rotation: Rotation
+	edges: EdgeSet = field(default_factory=EdgeSet)
 
 
 @dataclass(frozen=True)

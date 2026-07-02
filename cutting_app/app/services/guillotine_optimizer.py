@@ -348,6 +348,7 @@ def _place_candidate(
 			width_mm=part_area.width_mm,
 			height_mm=part_area.height_mm,
 			rotation=candidate.rotation,
+			edges=part_unit.part.edges,
 		)
 	)
 
