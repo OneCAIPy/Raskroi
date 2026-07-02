@@ -5,8 +5,10 @@ from cutting_app.app.domain.cut_settings import CutSettings
 from cutting_app.app.domain.cut_tree import CutDirection, CutLine, CutNode, RectArea
 from cutting_app.app.domain.cutting_result import (
 	ActualCut,
+	CuttingMetrics,
 	CuttingResult,
 	PlacedPart,
+	SheetCutMetrics,
 	SheetCutResult,
 	UnplacedPart,
 )
@@ -96,9 +98,12 @@ def optimize_guillotine_cutting(
 				)
 			)
 
+	sheet_results = [_to_sheet_cut_result(sheet) for sheet in working_sheets if sheet.placed_parts]
+
 	return CuttingResult(
-		sheets=[_to_sheet_cut_result(sheet) for sheet in working_sheets if sheet.placed_parts],
+		sheets=sheet_results,
 		unplaced_parts=unplaced_parts,
+		metrics=_calculate_cutting_metrics(sheet_results, unplaced_parts),
 	)
 
 
@@ -553,14 +558,25 @@ def _apply_single_horizontal_split(
 
 
 def _to_sheet_cut_result(working_sheet: _WorkingSheet) -> SheetCutResult:
+	waste_areas = [free_node.node.area for free_node in working_sheet.free_nodes]
+	actual_cuts = _collect_actual_cuts(working_sheet.root)
+
 	return SheetCutResult(
 		sheet_name=working_sheet.name,
 		sheet_width_mm=working_sheet.sheet.width_mm,
 		sheet_height_mm=working_sheet.sheet.height_mm,
 		root=working_sheet.root,
 		placed_parts=working_sheet.placed_parts,
-		waste_areas=[free_node.node.area for free_node in working_sheet.free_nodes],
-		actual_cuts=_collect_actual_cuts(working_sheet.root),
+		waste_areas=waste_areas,
+		actual_cuts=actual_cuts,
+		metrics=_calculate_sheet_metrics(
+			sheet_width_mm=working_sheet.sheet.width_mm,
+			sheet_height_mm=working_sheet.sheet.height_mm,
+			usable_area=working_sheet.root.area,
+			placed_parts=working_sheet.placed_parts,
+			waste_areas=waste_areas,
+			actual_cuts=actual_cuts,
+		),
 	)
 
 
@@ -605,3 +621,65 @@ def _make_actual_cut(node: CutNode) -> ActualCut:
 		y2_mm=cut.position_mm,
 		kerf_width_mm=cut.kerf_width_mm,
 	)
+
+
+def _calculate_sheet_metrics(
+	sheet_width_mm: float,
+	sheet_height_mm: float,
+	usable_area: RectArea,
+	placed_parts: list[PlacedPart],
+	waste_areas: list[RectArea],
+	actual_cuts: list[ActualCut],
+) -> SheetCutMetrics:
+	sheet_area_mm2 = sheet_width_mm * sheet_height_mm
+	usable_area_mm2 = usable_area.width_mm * usable_area.height_mm
+	placed_area_mm2 = sum(part.width_mm * part.height_mm for part in placed_parts)
+	waste_area_mm2 = sum(area.width_mm * area.height_mm for area in waste_areas)
+	kerf_area_mm2 = sum(_actual_cut_length(cut) * cut.kerf_width_mm for cut in actual_cuts)
+	efficiency_percent = _calculate_efficiency_percent(placed_area_mm2, usable_area_mm2)
+
+	return SheetCutMetrics(
+		sheet_area_mm2=sheet_area_mm2,
+		usable_area_mm2=usable_area_mm2,
+		placed_area_mm2=placed_area_mm2,
+		waste_area_mm2=waste_area_mm2,
+		kerf_area_mm2=kerf_area_mm2,
+		efficiency_percent=efficiency_percent,
+	)
+
+
+def _calculate_cutting_metrics(
+	sheets: list[SheetCutResult],
+	unplaced_parts: list[UnplacedPart],
+) -> CuttingMetrics:
+	sheet_area_mm2 = sum(sheet.metrics.sheet_area_mm2 for sheet in sheets)
+	usable_area_mm2 = sum(sheet.metrics.usable_area_mm2 for sheet in sheets)
+	placed_area_mm2 = sum(sheet.metrics.placed_area_mm2 for sheet in sheets)
+	waste_area_mm2 = sum(sheet.metrics.waste_area_mm2 for sheet in sheets)
+	kerf_area_mm2 = sum(sheet.metrics.kerf_area_mm2 for sheet in sheets)
+
+	return CuttingMetrics(
+		sheet_count=len(sheets),
+		placed_part_count=sum(len(sheet.placed_parts) for sheet in sheets),
+		unplaced_part_count=len(unplaced_parts),
+		sheet_area_mm2=sheet_area_mm2,
+		usable_area_mm2=usable_area_mm2,
+		placed_area_mm2=placed_area_mm2,
+		waste_area_mm2=waste_area_mm2,
+		kerf_area_mm2=kerf_area_mm2,
+		efficiency_percent=_calculate_efficiency_percent(placed_area_mm2, usable_area_mm2),
+	)
+
+
+def _actual_cut_length(cut: ActualCut) -> float:
+	if cut.direction == CutDirection.VERTICAL:
+		return cut.y2_mm - cut.y1_mm
+
+	return cut.x2_mm - cut.x1_mm
+
+
+def _calculate_efficiency_percent(placed_area_mm2: float, usable_area_mm2: float) -> float:
+	if usable_area_mm2 <= 0:
+		return 0
+
+	return placed_area_mm2 / usable_area_mm2 * 100

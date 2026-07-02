@@ -241,3 +241,63 @@ def test_exact_fit_sheet_result_has_no_actual_cuts():
 	)
 
 	assert result.sheets[0].actual_cuts == []
+
+
+def test_sheet_result_contains_area_metrics():
+	result = optimize_guillotine_cutting(
+		parts=[_part("1", 700, 200)],
+		sheets=[SheetInput(name="Лист", width_mm=1000, height_mm=800)],
+		settings=CutSettings(kerf_width_mm=4),
+	)
+
+	metrics = result.sheets[0].metrics
+
+	assert metrics.sheet_area_mm2 == 800000
+	assert metrics.usable_area_mm2 == 800000
+	assert metrics.placed_area_mm2 == 140000
+	assert metrics.waste_area_mm2 == 655200
+	assert metrics.kerf_area_mm2 == 4800
+	assert metrics.efficiency_percent == 17.5
+	assert metrics.placed_area_mm2 + metrics.waste_area_mm2 + metrics.kerf_area_mm2 == metrics.usable_area_mm2
+
+
+def test_cutting_result_contains_total_metrics_and_unplaced_count():
+	result = optimize_guillotine_cutting(
+		parts=[_part("1", 700, 200), _part("2", 2000, 2000)],
+		sheets=[SheetInput(name="Лист", width_mm=1000, height_mm=800)],
+		settings=CutSettings(kerf_width_mm=4),
+	)
+
+	metrics = result.metrics
+
+	assert metrics.sheet_count == 1
+	assert metrics.placed_part_count == 1
+	assert metrics.unplaced_part_count == 1
+	assert metrics.sheet_area_mm2 == 800000
+	assert metrics.usable_area_mm2 == 800000
+	assert metrics.placed_area_mm2 == 140000
+	assert metrics.waste_area_mm2 == 655200
+	assert metrics.kerf_area_mm2 == 4800
+	assert metrics.efficiency_percent == 17.5
+
+
+def test_sheet_metrics_use_usable_area_inside_margins():
+	result = optimize_guillotine_cutting(
+		parts=[_part("1", 100, 100)],
+		sheets=[
+			SheetInput(
+				name="Лист",
+				width_mm=1000,
+				height_mm=1000,
+				margins=SheetMargins(left_mm=10, top_mm=20, right_mm=10, bottom_mm=20),
+			)
+		],
+		settings=CutSettings(kerf_width_mm=4),
+	)
+
+	metrics = result.sheets[0].metrics
+
+	assert metrics.sheet_area_mm2 == 1000000
+	assert metrics.usable_area_mm2 == 940800
+	assert metrics.placed_area_mm2 == 10000
+	assert metrics.placed_area_mm2 + metrics.waste_area_mm2 + metrics.kerf_area_mm2 == metrics.usable_area_mm2
