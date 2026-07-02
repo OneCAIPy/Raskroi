@@ -158,3 +158,48 @@ def test_candidate_selection_prefers_tighter_free_area_over_earlier_area():
 	assert second.width_mm == 300
 	assert second.height_mm == 500
 	assert result.unplaced_parts == []
+
+
+def _collect_nodes(node):
+	result = [node]
+	if node.first is not None:
+		result.extend(_collect_nodes(node.first))
+	if node.second is not None:
+		result.extend(_collect_nodes(node.second))
+	return result
+
+
+def test_cut_tree_marks_free_leaf_nodes_as_waste():
+	result = optimize_guillotine_cutting(
+		parts=[_part("1", 400, 400), _part("2", 300, 500)],
+		sheets=[SheetInput(name="Лист", width_mm=1000, height_mm=1000)],
+		settings=CutSettings(kerf_width_mm=4),
+	)
+
+	sheet = result.sheets[0]
+	nodes = _collect_nodes(sheet.root)
+	leaf_nodes = [node for node in nodes if node.is_leaf]
+	part_leaf_nodes = [node for node in leaf_nodes if node.part_number is not None]
+	waste_leaf_nodes = [node for node in leaf_nodes if node.part_number is None]
+
+	assert len(part_leaf_nodes) == 2
+	assert all(not node.is_waste for node in part_leaf_nodes)
+	assert all(node.is_waste for node in waste_leaf_nodes)
+	assert all(not node.is_waste for node in nodes if not node.is_leaf)
+	assert set(node.area for node in waste_leaf_nodes) == set(sheet.waste_areas)
+
+
+def test_exact_fit_leaf_is_part_not_waste():
+	result = optimize_guillotine_cutting(
+		parts=[_part("1", 1000, 1000, rotation_allowed=False)],
+		sheets=[SheetInput(name="Лист", width_mm=1000, height_mm=1000)],
+		settings=CutSettings(kerf_width_mm=4),
+	)
+
+	sheet = result.sheets[0]
+	root = sheet.root
+
+	assert root.is_leaf
+	assert root.part_number == "1"
+	assert root.is_waste is False
+	assert sheet.waste_areas == []

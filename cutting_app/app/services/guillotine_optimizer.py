@@ -113,7 +113,8 @@ def _create_working_sheets(sheets: list[SheetInput]) -> list[_WorkingSheet]:
 					y_mm=usable_area.y_mm,
 					width_mm=usable_area.width_mm,
 					height_mm=usable_area.height_mm,
-				)
+				),
+				is_waste=True,
 			)
 			name = _make_sheet_copy_name(sheet, copy_index)
 			working_sheets.append(
@@ -267,6 +268,7 @@ def _place_candidate(
 	free_node = candidate.free_node
 	area = free_node.node.area
 	working_sheet.free_nodes.remove(free_node)
+	free_node.node.is_waste = False
 
 	part_area = RectArea(
 		x_mm=area.x_mm,
@@ -473,7 +475,7 @@ def _apply_vertical_first_two_step_split(
 		kerf_width_mm=kerf_width_mm,
 	)
 	free_node.node.first = CutNode(area=left_strip)
-	free_node.node.second = CutNode(area=right_area)
+	free_node.node.second = CutNode(area=right_area, is_waste=True)
 
 	free_node.node.first.cut = CutLine(
 		direction=CutDirection.HORIZONTAL,
@@ -481,7 +483,7 @@ def _apply_vertical_first_two_step_split(
 		kerf_width_mm=kerf_width_mm,
 	)
 	free_node.node.first.first = CutNode(area=part_area, part_number=part_number)
-	free_node.node.first.second = CutNode(area=bottom_area)
+	free_node.node.first.second = CutNode(area=bottom_area, is_waste=True)
 
 
 def _apply_horizontal_first_two_step_split(
@@ -506,7 +508,7 @@ def _apply_horizontal_first_two_step_split(
 		kerf_width_mm=kerf_width_mm,
 	)
 	free_node.node.first = CutNode(area=top_strip)
-	free_node.node.second = CutNode(area=bottom_area)
+	free_node.node.second = CutNode(area=bottom_area, is_waste=True)
 
 	free_node.node.first.cut = CutLine(
 		direction=CutDirection.VERTICAL,
@@ -514,7 +516,7 @@ def _apply_horizontal_first_two_step_split(
 		kerf_width_mm=kerf_width_mm,
 	)
 	free_node.node.first.first = CutNode(area=part_area, part_number=part_number)
-	free_node.node.first.second = CutNode(area=right_area)
+	free_node.node.first.second = CutNode(area=right_area, is_waste=True)
 
 
 def _apply_single_vertical_split(
@@ -530,7 +532,7 @@ def _apply_single_vertical_split(
 		kerf_width_mm=kerf_width_mm,
 	)
 	free_node.node.first = CutNode(area=part_area, part_number=part_number)
-	free_node.node.second = CutNode(area=right_area)
+	free_node.node.second = CutNode(area=right_area, is_waste=True)
 
 
 def _apply_single_horizontal_split(
@@ -546,7 +548,7 @@ def _apply_single_horizontal_split(
 		kerf_width_mm=kerf_width_mm,
 	)
 	free_node.node.first = CutNode(area=part_area, part_number=part_number)
-	free_node.node.second = CutNode(area=bottom_area)
+	free_node.node.second = CutNode(area=bottom_area, is_waste=True)
 
 
 def _to_sheet_cut_result(working_sheet: _WorkingSheet) -> SheetCutResult:
