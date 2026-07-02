@@ -1,4 +1,5 @@
 from cutting_app.app.domain.cut_settings import CutSettings
+from cutting_app.app.domain.cut_tree import CutDirection
 from cutting_app.app.domain.edge import EdgeSet
 from cutting_app.app.domain.placement import Rotation
 from cutting_app.app.domain.part import PartInput
@@ -102,3 +103,39 @@ def test_part_is_placed_with_rotation_when_allowed():
 	assert placed.width_mm == 500
 	assert placed.height_mm == 1200
 	assert result.unplaced_parts == []
+
+
+def test_equal_split_score_keeps_vertical_first_for_determinism():
+	result = optimize_guillotine_cutting(
+		parts=[_part("1", 400, 400)],
+		sheets=[SheetInput(name="Лист", width_mm=1000, height_mm=1000)],
+		settings=CutSettings(kerf_width_mm=4),
+	)
+
+	root = result.sheets[0].root
+
+	assert root.cut.direction == CutDirection.VERTICAL
+	assert root.cut.position_mm == 400
+	assert root.second.area.x_mm == 404
+
+
+def test_horizontal_first_split_can_be_chosen_to_reduce_actual_kerf_loss():
+	result = optimize_guillotine_cutting(
+		parts=[_part("1", 700, 200)],
+		sheets=[SheetInput(name="Лист", width_mm=1000, height_mm=800)],
+		settings=CutSettings(kerf_width_mm=4),
+	)
+
+	root = result.sheets[0].root
+
+	assert root.cut.direction == CutDirection.HORIZONTAL
+	assert root.cut.position_mm == 200
+	assert root.second.area.x_mm == 0
+	assert root.second.area.y_mm == 204
+	assert root.second.area.width_mm == 1000
+	assert root.second.area.height_mm == 596
+	assert root.first.cut.direction == CutDirection.VERTICAL
+	assert root.first.second.area.x_mm == 704
+	assert root.first.second.area.y_mm == 0
+	assert root.first.second.area.width_mm == 296
+	assert root.first.second.area.height_mm == 200
