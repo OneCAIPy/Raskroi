@@ -1,0 +1,365 @@
+from dataclasses import dataclass, field
+
+from cutting_app.app.domain.cut_settings import CutSettings
+from cutting_app.app.domain.cut_tree import CutDirection, CutLine, CutNode, RectArea
+from cutting_app.app.domain.cutting_result import (
+	CuttingResult,
+	PlacedPart,
+	SheetCutResult,
+	UnplacedPart,
+)
+from cutting_app.app.domain.part import PartInput
+from cutting_app.app.domain.placement import Rotation
+from cutting_app.app.domain.sheet import SheetInput
+from cutting_app.app.services.placement_calculator import calculate_placed_dimensions
+from cutting_app.app.services.sheet_calculator import calculate_usable_sheet_area
+from cutting_app.app.services.size_calculator import calculate_part_sizes
+
+
+@dataclass(frozen=True)
+class _PartUnit:
+	part: PartInput
+	unit_number: str
+
+
+@dataclass
+class _FreeNode:
+	node: CutNode
+
+
+@dataclass
+class _WorkingSheet:
+	sheet: SheetInput
+	name: str
+	root: CutNode
+	free_nodes: list[_FreeNode] = field(default_factory=list)
+	placed_parts: list[PlacedPart] = field(default_factory=list)
+	waste_areas: list[RectArea] = field(default_factory=list)
+
+
+@dataclass(frozen=True)
+class _PlacementCandidate:
+	free_node: _FreeNode
+	rotation: Rotation
+	width_mm: float
+	height_mm: float
+
+
+def optimize_guillotine_cutting(
+	parts: list[PartInput],
+	sheets: list[SheetInput],
+	settings: CutSettings,
+) -> CuttingResult:
+	working_sheets = _create_working_sheets(sheets)
+	part_units = _expand_and_sort_parts(parts)
+	unplaced_parts: list[UnplacedPart] = []
+
+	for part_unit in part_units:
+		placed = False
+
+		for working_sheet in working_sheets:
+			candidate = _find_first_candidate(working_sheet, part_unit.part)
+			if candidate is None:
+				continue
+
+			_place_candidate(
+				working_sheet=working_sheet,
+				part_unit=part_unit,
+				candidate=candidate,
+				settings=settings,
+			)
+			placed = True
+			break
+
+		if not placed:
+			unplaced_parts.append(
+				UnplacedPart(
+					part_number=part_unit.unit_number,
+					source_part_number=part_unit.part.number,
+					part_name=part_unit.part.name,
+					reason_code="DETAIL_DOES_NOT_FIT",
+					reason="Деталь не помещается ни на один доступный лист с учётом поворота, отступов и пропила.",
+				)
+			)
+
+	return CuttingResult(
+		sheets=[_to_sheet_cut_result(sheet) for sheet in working_sheets if sheet.placed_parts],
+		unplaced_parts=unplaced_parts,
+	)
+
+
+def _create_working_sheets(sheets: list[SheetInput]) -> list[_WorkingSheet]:
+	working_sheets: list[_WorkingSheet] = []
+
+	for sheet in _sort_sheets(sheets):
+		for copy_index in range(sheet.quantity):
+			usable_area = calculate_usable_sheet_area(sheet)
+			root = CutNode(
+				area=RectArea(
+					x_mm=usable_area.x_mm,
+					y_mm=usable_area.y_mm,
+					width_mm=usable_area.width_mm,
+					height_mm=usable_area.height_mm,
+				)
+			)
+			name = _make_sheet_copy_name(sheet, copy_index)
+			working_sheets.append(
+				_WorkingSheet(
+					sheet=sheet,
+					name=name,
+					root=root,
+					free_nodes=[_FreeNode(root)],
+				)
+			)
+
+	return working_sheets
+
+
+def _sort_sheets(sheets: list[SheetInput]) -> list[SheetInput]:
+	return sorted(
+		sheets,
+		key=lambda sheet: (
+			0 if sheet.is_remnant else 1,
+			sheet.width_mm * sheet.height_mm,
+			sheet.name,
+		),
+	)
+
+
+def _make_sheet_copy_name(sheet: SheetInput, copy_index: int) -> str:
+	if sheet.quantity == 1:
+		return sheet.name
+	return f"{sheet.name} #{copy_index + 1}"
+
+
+def _expand_and_sort_parts(parts: list[PartInput]) -> list[_PartUnit]:
+	part_units: list[_PartUnit] = []
+
+	for part in parts:
+		for copy_index in range(part.quantity):
+			unit_number = part.number if part.quantity == 1 else f"{part.number}-{copy_index + 1}"
+			part_units.append(_PartUnit(part=part, unit_number=unit_number))
+
+	return sorted(
+		part_units,
+		key=lambda part_unit: _part_sort_key(part_unit.part, part_unit.unit_number),
+	)
+
+
+def _part_sort_key(part: PartInput, unit_number: str) -> tuple[float, float, float, str]:
+	sizes = calculate_part_sizes(part)
+	area = sizes.cutting_l_mm * sizes.cutting_w_mm
+	long_side = max(sizes.cutting_l_mm, sizes.cutting_w_mm)
+	short_side = min(sizes.cutting_l_mm, sizes.cutting_w_mm)
+	return (-area, -long_side, -short_side, unit_number)
+
+
+def _find_first_candidate(
+	working_sheet: _WorkingSheet,
+	part: PartInput,
+) -> _PlacementCandidate | None:
+	for free_node in _sorted_free_nodes(working_sheet.free_nodes):
+		for rotation in _allowed_rotations(part):
+			dimensions = calculate_placed_dimensions(calculate_part_sizes(part), rotation)
+			if _fits(free_node.node.area, dimensions.width_mm, dimensions.height_mm):
+				return _PlacementCandidate(
+					free_node=free_node,
+					rotation=rotation,
+					width_mm=dimensions.width_mm,
+					height_mm=dimensions.height_mm,
+				)
+
+	return None
+
+
+def _sorted_free_nodes(free_nodes: list[_FreeNode]) -> list[_FreeNode]:
+	return sorted(
+		free_nodes,
+		key=lambda free_node: (
+			free_node.node.area.y_mm,
+			free_node.node.area.x_mm,
+			free_node.node.area.width_mm * free_node.node.area.height_mm,
+		),
+	)
+
+
+def _allowed_rotations(part: PartInput) -> list[Rotation]:
+	if part.rotation_allowed:
+		return [Rotation.DEG_0, Rotation.DEG_90]
+	return [Rotation.DEG_0]
+
+
+def _fits(area: RectArea, width_mm: float, height_mm: float) -> bool:
+	return width_mm <= area.width_mm and height_mm <= area.height_mm
+
+
+def _place_candidate(
+	working_sheet: _WorkingSheet,
+	part_unit: _PartUnit,
+	candidate: _PlacementCandidate,
+	settings: CutSettings,
+) -> None:
+	free_node = candidate.free_node
+	area = free_node.node.area
+	working_sheet.free_nodes.remove(free_node)
+
+	part_area = RectArea(
+		x_mm=area.x_mm,
+		y_mm=area.y_mm,
+		width_mm=candidate.width_mm,
+		height_mm=candidate.height_mm,
+	)
+
+	right_area = _make_right_area(area, candidate.width_mm, settings.kerf_width_mm)
+	bottom_area = _make_bottom_area(area, candidate.width_mm, candidate.height_mm, settings.kerf_width_mm)
+
+	if right_area is not None and bottom_area is not None:
+		_apply_two_step_split(
+			free_node=free_node,
+			part_area=part_area,
+			right_area=right_area,
+			bottom_area=bottom_area,
+			part_number=part_unit.unit_number,
+			kerf_width_mm=settings.kerf_width_mm,
+		)
+		working_sheet.free_nodes.append(_FreeNode(free_node.node.second))
+		working_sheet.free_nodes.append(_FreeNode(free_node.node.first.second))
+	elif right_area is not None:
+		_apply_single_vertical_split(
+			free_node=free_node,
+			part_area=part_area,
+			right_area=right_area,
+			part_number=part_unit.unit_number,
+			kerf_width_mm=settings.kerf_width_mm,
+		)
+		working_sheet.free_nodes.append(_FreeNode(free_node.node.second))
+	elif bottom_area is not None:
+		_apply_single_horizontal_split(
+			free_node=free_node,
+			part_area=part_area,
+			bottom_area=bottom_area,
+			part_number=part_unit.unit_number,
+			kerf_width_mm=settings.kerf_width_mm,
+		)
+		working_sheet.free_nodes.append(_FreeNode(free_node.node.second))
+	else:
+		free_node.node.part_number = part_unit.unit_number
+
+	working_sheet.placed_parts.append(
+		PlacedPart(
+			part_number=part_unit.unit_number,
+			source_part_number=part_unit.part.number,
+			part_name=part_unit.part.name,
+			sheet_name=working_sheet.name,
+			x_mm=part_area.x_mm,
+			y_mm=part_area.y_mm,
+			width_mm=part_area.width_mm,
+			height_mm=part_area.height_mm,
+			rotation=candidate.rotation,
+		)
+	)
+
+
+def _make_right_area(area: RectArea, part_width_mm: float, kerf_width_mm: float) -> RectArea | None:
+	width_mm = area.width_mm - part_width_mm - kerf_width_mm
+	if width_mm <= 0:
+		return None
+	return RectArea(
+		x_mm=area.x_mm + part_width_mm + kerf_width_mm,
+		y_mm=area.y_mm,
+		width_mm=width_mm,
+		height_mm=area.height_mm,
+	)
+
+
+def _make_bottom_area(
+	area: RectArea,
+	part_width_mm: float,
+	part_height_mm: float,
+	kerf_width_mm: float,
+) -> RectArea | None:
+	height_mm = area.height_mm - part_height_mm - kerf_width_mm
+	if height_mm <= 0:
+		return None
+	return RectArea(
+		x_mm=area.x_mm,
+		y_mm=area.y_mm + part_height_mm + kerf_width_mm,
+		width_mm=part_width_mm,
+		height_mm=height_mm,
+	)
+
+
+def _apply_two_step_split(
+	free_node: _FreeNode,
+	part_area: RectArea,
+	right_area: RectArea,
+	bottom_area: RectArea,
+	part_number: str,
+	kerf_width_mm: float,
+) -> None:
+	area = free_node.node.area
+	left_strip = RectArea(
+		x_mm=area.x_mm,
+		y_mm=area.y_mm,
+		width_mm=part_area.width_mm,
+		height_mm=area.height_mm,
+	)
+
+	free_node.node.cut = CutLine(
+		direction=CutDirection.VERTICAL,
+		position_mm=area.x_mm + part_area.width_mm,
+		kerf_width_mm=kerf_width_mm,
+	)
+	free_node.node.first = CutNode(area=left_strip)
+	free_node.node.second = CutNode(area=right_area)
+
+	free_node.node.first.cut = CutLine(
+		direction=CutDirection.HORIZONTAL,
+		position_mm=area.y_mm + part_area.height_mm,
+		kerf_width_mm=kerf_width_mm,
+	)
+	free_node.node.first.first = CutNode(area=part_area, part_number=part_number)
+	free_node.node.first.second = CutNode(area=bottom_area)
+
+
+def _apply_single_vertical_split(
+	free_node: _FreeNode,
+	part_area: RectArea,
+	right_area: RectArea,
+	part_number: str,
+	kerf_width_mm: float,
+) -> None:
+	free_node.node.cut = CutLine(
+		direction=CutDirection.VERTICAL,
+		position_mm=part_area.x_mm + part_area.width_mm,
+		kerf_width_mm=kerf_width_mm,
+	)
+	free_node.node.first = CutNode(area=part_area, part_number=part_number)
+	free_node.node.second = CutNode(area=right_area)
+
+
+def _apply_single_horizontal_split(
+	free_node: _FreeNode,
+	part_area: RectArea,
+	bottom_area: RectArea,
+	part_number: str,
+	kerf_width_mm: float,
+) -> None:
+	free_node.node.cut = CutLine(
+		direction=CutDirection.HORIZONTAL,
+		position_mm=part_area.y_mm + part_area.height_mm,
+		kerf_width_mm=kerf_width_mm,
+	)
+	free_node.node.first = CutNode(area=part_area, part_number=part_number)
+	free_node.node.second = CutNode(area=bottom_area)
+
+
+def _to_sheet_cut_result(working_sheet: _WorkingSheet) -> SheetCutResult:
+	return SheetCutResult(
+		sheet_name=working_sheet.name,
+		sheet_width_mm=working_sheet.sheet.width_mm,
+		sheet_height_mm=working_sheet.sheet.height_mm,
+		root=working_sheet.root,
+		placed_parts=working_sheet.placed_parts,
+		waste_areas=[free_node.node.area for free_node in working_sheet.free_nodes],
+	)
