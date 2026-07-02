@@ -37,8 +37,10 @@ def test_two_neighbor_parts_use_one_actual_kerf_between_them():
 	second = sheet.placed_parts[1]
 
 	assert first.x_mm == 0
-	assert second.x_mm == 404
-	assert second.x_mm - (first.x_mm + first.width_mm) == 4
+	assert first.y_mm == 0
+	assert second.x_mm == 0
+	assert second.y_mm == 404
+	assert second.y_mm - (first.y_mm + first.height_mm) == 4
 	assert first.width_mm == 400
 	assert second.width_mm == 400
 	assert result.unplaced_parts == []
@@ -139,3 +141,20 @@ def test_horizontal_first_split_can_be_chosen_to_reduce_actual_kerf_loss():
 	assert root.first.second.area.y_mm == 0
 	assert root.first.second.area.width_mm == 296
 	assert root.first.second.area.height_mm == 200
+
+
+def test_candidate_selection_prefers_tighter_free_area_over_earlier_area():
+	result = optimize_guillotine_cutting(
+		parts=[_part("1", 400, 400), _part("2", 300, 500)],
+		sheets=[SheetInput(name="Лист", width_mm=1000, height_mm=1000)],
+		settings=CutSettings(kerf_width_mm=4),
+	)
+
+	placed_by_number = {part.source_part_number: part for part in result.sheets[0].placed_parts}
+	second = placed_by_number["2"]
+
+	assert second.x_mm == 0
+	assert second.y_mm == 404
+	assert second.width_mm == 300
+	assert second.height_mm == 500
+	assert result.unplaced_parts == []

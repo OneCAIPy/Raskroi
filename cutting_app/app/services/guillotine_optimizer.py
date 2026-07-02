@@ -71,7 +71,7 @@ def optimize_guillotine_cutting(
 		placed = False
 
 		for working_sheet in working_sheets:
-			candidate = _find_first_candidate(working_sheet, part_unit.part, settings)
+			candidate = _find_best_candidate(working_sheet, part_unit.part, settings)
 			if candidate is None:
 				continue
 
@@ -167,16 +167,22 @@ def _part_sort_key(part: PartInput, unit_number: str) -> tuple[float, float, flo
 	return (-area, -long_side, -short_side, unit_number)
 
 
-def _find_first_candidate(
+def _find_best_candidate(
 	working_sheet: _WorkingSheet,
 	part: PartInput,
 	settings: CutSettings,
 ) -> _PlacementCandidate | None:
+	part_sizes = calculate_part_sizes(part)
+	candidates: list[_PlacementCandidate] = []
+
 	for free_node in _sorted_free_nodes(working_sheet.free_nodes):
 		for rotation in _allowed_rotations(part):
-			dimensions = calculate_placed_dimensions(calculate_part_sizes(part), rotation)
-			if _fits(free_node.node.area, dimensions.width_mm, dimensions.height_mm):
-				return _PlacementCandidate(
+			dimensions = calculate_placed_dimensions(part_sizes, rotation)
+			if not _fits(free_node.node.area, dimensions.width_mm, dimensions.height_mm):
+				continue
+
+			candidates.append(
+				_PlacementCandidate(
 					free_node=free_node,
 					rotation=rotation,
 					width_mm=dimensions.width_mm,
@@ -188,8 +194,15 @@ def _find_first_candidate(
 						kerf_width_mm=settings.kerf_width_mm,
 					),
 				)
+			)
 
-	return None
+	if not candidates:
+		return None
+
+	return min(
+		candidates,
+		key=lambda candidate: _score_placement_candidate(candidate, settings.kerf_width_mm),
+	)
 
 
 def _sorted_free_nodes(free_nodes: list[_FreeNode]) -> list[_FreeNode]:
@@ -211,6 +224,38 @@ def _allowed_rotations(part: PartInput) -> list[Rotation]:
 
 def _fits(area: RectArea, width_mm: float, height_mm: float) -> bool:
 	return width_mm <= area.width_mm and height_mm <= area.height_mm
+
+
+def _score_placement_candidate(
+	candidate: _PlacementCandidate,
+	kerf_width_mm: float,
+) -> tuple[float, float, float, float, float, float, int, int]:
+	area = candidate.free_node.node.area
+	area_excess = area.width_mm * area.height_mm - candidate.width_mm * candidate.height_mm
+	width_gap = area.width_mm - candidate.width_mm
+	height_gap = area.height_mm - candidate.height_mm
+	short_gap = min(width_gap, height_gap)
+	long_gap = max(width_gap, height_gap)
+	kerf_loss_area = _score_split_strategy(
+		area=area,
+		part_width_mm=candidate.width_mm,
+		part_height_mm=candidate.height_mm,
+		kerf_width_mm=kerf_width_mm,
+		strategy=candidate.split_strategy,
+	)[0]
+	rotation_order = 0 if candidate.rotation == Rotation.DEG_0 else 1
+	split_order = 0 if candidate.split_strategy == SplitStrategy.VERTICAL_FIRST else 1
+
+	return (
+		area_excess,
+		rotation_order,
+		kerf_loss_area,
+		short_gap,
+		long_gap,
+		area.y_mm,
+		area.x_mm,
+		split_order,
+	)
 
 
 def _place_candidate(
