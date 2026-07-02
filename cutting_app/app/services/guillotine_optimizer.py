@@ -4,6 +4,7 @@ from enum import Enum
 from cutting_app.app.domain.cut_settings import CutSettings
 from cutting_app.app.domain.cut_tree import CutDirection, CutLine, CutNode, RectArea
 from cutting_app.app.domain.cutting_result import (
+	ActualCut,
 	CuttingResult,
 	PlacedPart,
 	SheetCutResult,
@@ -559,4 +560,48 @@ def _to_sheet_cut_result(working_sheet: _WorkingSheet) -> SheetCutResult:
 		root=working_sheet.root,
 		placed_parts=working_sheet.placed_parts,
 		waste_areas=[free_node.node.area for free_node in working_sheet.free_nodes],
+		actual_cuts=_collect_actual_cuts(working_sheet.root),
+	)
+
+
+def _collect_actual_cuts(node: CutNode) -> list[ActualCut]:
+	cuts: list[ActualCut] = []
+	_collect_actual_cuts_into(node, cuts)
+	return cuts
+
+
+def _collect_actual_cuts_into(node: CutNode, cuts: list[ActualCut]) -> None:
+	if node.cut is not None:
+		cuts.append(_make_actual_cut(node))
+
+	if node.first is not None:
+		_collect_actual_cuts_into(node.first, cuts)
+
+	if node.second is not None:
+		_collect_actual_cuts_into(node.second, cuts)
+
+
+def _make_actual_cut(node: CutNode) -> ActualCut:
+	area = node.area
+	cut = node.cut
+	if cut is None:
+		raise ValueError("Нельзя построить фактический рез для узла без линии реза.")
+
+	if cut.direction == CutDirection.VERTICAL:
+		return ActualCut(
+			direction=cut.direction,
+			x1_mm=cut.position_mm,
+			y1_mm=area.y_mm,
+			x2_mm=cut.position_mm,
+			y2_mm=area.bottom_mm,
+			kerf_width_mm=cut.kerf_width_mm,
+		)
+
+	return ActualCut(
+		direction=cut.direction,
+		x1_mm=area.x_mm,
+		y1_mm=cut.position_mm,
+		x2_mm=area.right_mm,
+		y2_mm=cut.position_mm,
+		kerf_width_mm=cut.kerf_width_mm,
 	)

@@ -203,3 +203,41 @@ def test_exact_fit_leaf_is_part_not_waste():
 	assert root.part_number == "1"
 	assert root.is_waste is False
 	assert sheet.waste_areas == []
+
+
+def test_sheet_result_contains_actual_cut_segments_from_tree():
+	result = optimize_guillotine_cutting(
+		parts=[_part("1", 700, 200)],
+		sheets=[SheetInput(name="Лист", width_mm=1000, height_mm=800)],
+		settings=CutSettings(kerf_width_mm=4),
+	)
+
+	actual_cuts = result.sheets[0].actual_cuts
+
+	assert len(actual_cuts) == 2
+
+	first_cut = actual_cuts[0]
+	assert first_cut.direction == CutDirection.HORIZONTAL
+	assert first_cut.x1_mm == 0
+	assert first_cut.y1_mm == 200
+	assert first_cut.x2_mm == 1000
+	assert first_cut.y2_mm == 200
+	assert first_cut.kerf_width_mm == 4
+
+	second_cut = actual_cuts[1]
+	assert second_cut.direction == CutDirection.VERTICAL
+	assert second_cut.x1_mm == 700
+	assert second_cut.y1_mm == 0
+	assert second_cut.x2_mm == 700
+	assert second_cut.y2_mm == 200
+	assert second_cut.kerf_width_mm == 4
+
+
+def test_exact_fit_sheet_result_has_no_actual_cuts():
+	result = optimize_guillotine_cutting(
+		parts=[_part("1", 1000, 1000, rotation_allowed=False)],
+		sheets=[SheetInput(name="Лист", width_mm=1000, height_mm=1000)],
+		settings=CutSettings(kerf_width_mm=4),
+	)
+
+	assert result.sheets[0].actual_cuts == []
