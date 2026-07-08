@@ -4,6 +4,7 @@ from cutting_app.app.examples.demo_cutting_orders import (
 	build_demo_order_with_remnant,
 	build_demo_order_with_rotation_and_edges,
 	build_demo_order_with_unplaced_part,
+	find_demo_cutting_order,
 	list_demo_cutting_orders,
 )
 from cutting_app.app.services.guillotine_optimizer import optimize_guillotine_cutting
@@ -21,6 +22,29 @@ def test_demo_orders_have_unique_names() -> None:
 	names = [order.name for order in orders]
 
 	assert len(names) == len(set(names))
+
+
+def test_demo_orders_have_unique_slugs() -> None:
+	orders = list_demo_cutting_orders()
+
+	slugs = [order.slug for order in orders]
+
+	assert len(slugs) == len(set(slugs))
+
+
+def test_demo_order_can_be_found_by_slug() -> None:
+	order = find_demo_cutting_order("cabinet")
+
+	assert order.name == "Почти реальный корпусный заказ"
+
+
+def test_unknown_demo_order_slug_raises_error() -> None:
+	try:
+		find_demo_cutting_order("missing")
+	except ValueError as error:
+		assert "missing" in str(error)
+	else:
+		raise AssertionError("Expected ValueError for unknown demo order slug")
 
 
 def test_demo_order_with_unplaced_part_keeps_deliberate_error() -> None:

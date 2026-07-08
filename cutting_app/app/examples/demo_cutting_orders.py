@@ -8,6 +8,7 @@ from cutting_app.app.domain.sheet import SheetInput, SheetMargins
 
 @dataclass(frozen=True)
 class DemoCuttingOrder:
+	slug: str
 	name: str
 	parts: list[PartInput]
 	sheets: list[SheetInput]
@@ -24,8 +25,17 @@ def list_demo_cutting_orders() -> list[DemoCuttingOrder]:
 	]
 
 
+def find_demo_cutting_order(slug: str) -> DemoCuttingOrder:
+	for order in list_demo_cutting_orders():
+		if order.slug == slug:
+			return order
+
+	raise ValueError(f"Unknown demo cutting order slug: {slug}")
+
+
 def build_demo_order_simple_without_errors() -> DemoCuttingOrder:
 	return DemoCuttingOrder(
+		slug="simple",
 		name="Простой раскрой без ошибок",
 		parts=[
 			PartInput(
@@ -63,6 +73,7 @@ def build_demo_order_simple_without_errors() -> DemoCuttingOrder:
 
 def build_demo_order_with_remnant() -> DemoCuttingOrder:
 	return DemoCuttingOrder(
+		slug="remnant",
 		name="Раскрой с приоритетом остатка",
 		parts=[
 			PartInput(
@@ -108,6 +119,7 @@ def build_demo_order_with_remnant() -> DemoCuttingOrder:
 
 def build_demo_order_with_rotation_and_edges() -> DemoCuttingOrder:
 	return DemoCuttingOrder(
+		slug="rotation",
 		name="Раскрой с поворотом и кромкой",
 		parts=[
 			PartInput(
@@ -140,6 +152,7 @@ def build_demo_order_with_rotation_and_edges() -> DemoCuttingOrder:
 
 def build_demo_order_realistic_cabinet() -> DemoCuttingOrder:
 	return DemoCuttingOrder(
+		slug="cabinet",
 		name="Почти реальный корпусный заказ",
 		parts=[
 			PartInput(
@@ -209,6 +222,7 @@ def build_demo_order_realistic_cabinet() -> DemoCuttingOrder:
 
 def build_demo_order_with_unplaced_part() -> DemoCuttingOrder:
 	return DemoCuttingOrder(
+		slug="error",
 		name="Тестовый раскрой с неразмещённой деталью",
 		parts=[
 			PartInput(

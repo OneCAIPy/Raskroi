@@ -1,8 +1,9 @@
 from html import escape
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse, Response
 
+from cutting_app.app.examples.demo_cutting_orders import list_demo_cutting_orders
 from cutting_app.app.web.sample_preview import WebSvgPreview, build_sample_svg_preview
 
 
@@ -10,22 +11,75 @@ def create_app() -> FastAPI:
 	app = FastAPI(title="Гильотинный раскрой Nanxing")
 
 	@app.get("/", response_class=HTMLResponse)
-	def show_svg_preview() -> HTMLResponse:
-		preview = build_sample_svg_preview()
+	def show_demo_order_list() -> HTMLResponse:
+		return HTMLResponse(content=_render_demo_order_list_page())
+
+	@app.get("/preview/{order_slug}", response_class=HTMLResponse)
+	def show_svg_preview(order_slug: str) -> HTMLResponse:
+		preview = _build_preview_or_404(order_slug)
 		return HTMLResponse(content=_render_preview_page(preview))
 
-	@app.get("/preview.svg")
-	def download_svg() -> Response:
-		preview = build_sample_svg_preview()
+	@app.get("/preview/{order_slug}/svg")
+	def download_svg(order_slug: str) -> Response:
+		preview = _build_preview_or_404(order_slug)
+		filename = f"cutting-preview-{preview.order_slug}.svg"
+
 		return Response(
 			content=preview.svg,
 			media_type="image/svg+xml",
 			headers={
-				"Content-Disposition": 'attachment; filename="cutting-preview.svg"',
+				"Content-Disposition": f'attachment; filename="{filename}"',
 			},
 		)
 
 	return app
+
+
+def _build_preview_or_404(order_slug: str) -> WebSvgPreview:
+	try:
+		return build_sample_svg_preview(order_slug)
+	except ValueError as error:
+		raise HTTPException(status_code=404, detail="Demo cutting order not found") from error
+
+
+def _render_demo_order_list_page() -> str:
+	items = "\n".join(
+		_render_demo_order_link(order.slug, order.name)
+		for order in list_demo_cutting_orders()
+	)
+
+	return f"""<!doctype html>
+<html lang="ru">
+<head>
+	<meta charset="utf-8">
+	<title>Гильотинный раскрой Nanxing — demo-заказы</title>
+	{_render_styles()}
+</head>
+<body>
+	<header>
+		<h1>Гильотинный раскрой Nanxing</h1>
+		<div>Выбор demo-заказа для просмотра SVG</div>
+	</header>
+	<main>
+		<section class="panel">
+			<h2>Demo-заказы</h2>
+			<p>Выбери сценарий, чтобы посмотреть карту раскроя и скачать SVG.</p>
+			<div class="order-list">
+				{items}
+			</div>
+		</section>
+	</main>
+</body>
+</html>"""
+
+
+def _render_demo_order_link(slug: str, name: str) -> str:
+	return (
+		f'<a class="order-card" href="/preview/{escape(slug)}">'
+		f"<strong>{escape(name)}</strong>"
+		f"<span>{escape(slug)}</span>"
+		f"</a>"
+	)
 
 
 def _render_preview_page(preview: WebSvgPreview) -> str:
@@ -33,70 +87,8 @@ def _render_preview_page(preview: WebSvgPreview) -> str:
 <html lang="ru">
 <head>
 	<meta charset="utf-8">
-	<title>Гильотинный раскрой Nanxing — SVG preview</title>
-	<style>
-		body {{
-			margin: 0;
-			font-family: Arial, sans-serif;
-			background: #f5f5f5;
-			color: #222;
-		}}
-
-		header {{
-			padding: 16px 24px;
-			background: #222;
-			color: white;
-		}}
-
-		main {{
-			padding: 24px;
-		}}
-
-		.panel {{
-			margin-bottom: 18px;
-			padding: 16px;
-			background: white;
-			border: 1px solid #ddd;
-			border-radius: 8px;
-		}}
-
-		.actions {{
-			margin-top: 12px;
-		}}
-
-		.actions a {{
-			display: inline-block;
-			padding: 8px 12px;
-			background: #1f6feb;
-			color: white;
-			text-decoration: none;
-			border-radius: 6px;
-		}}
-
-		.issue {{
-			margin: 6px 0;
-			padding: 8px 10px;
-			border-radius: 6px;
-		}}
-
-		.issue.error {{
-			background: #ffe6e6;
-			border: 1px solid #ffb3b3;
-		}}
-
-		.issue.warning {{
-			background: #fff6d6;
-			border: 1px solid #ffe08a;
-		}}
-
-		.svg-wrapper {{
-			overflow: auto;
-			background: white;
-			border: 1px solid #ddd;
-			border-radius: 8px;
-			padding: 12px;
-		}}
-	</style>
+	<title>{escape(preview.order_name)} — SVG preview</title>
+	{_render_styles()}
 </head>
 <body>
 	<header>
@@ -105,10 +97,11 @@ def _render_preview_page(preview: WebSvgPreview) -> str:
 	</header>
 	<main>
 		<section class="panel">
-			<h2>Тестовый раскрой</h2>
+			<a href="/">← К списку demo-заказов</a>
+			<h2>{escape(preview.order_name)}</h2>
 			{_render_metrics(preview)}
 			<div class="actions">
-				<a href="/preview.svg" download>Скачать SVG</a>
+				<a href="/preview/{escape(preview.order_slug)}/svg" download>Скачать SVG</a>
 			</div>
 		</section>
 
@@ -123,6 +116,100 @@ def _render_preview_page(preview: WebSvgPreview) -> str:
 	</main>
 </body>
 </html>"""
+
+
+def _render_styles() -> str:
+	return """<style>
+		body {
+			margin: 0;
+			font-family: Arial, sans-serif;
+			background: #f5f5f5;
+			color: #222;
+		}
+
+		header {
+			padding: 16px 24px;
+			background: #222;
+			color: white;
+		}
+
+		main {
+			padding: 24px;
+		}
+
+		.panel {
+			margin-bottom: 18px;
+			padding: 16px;
+			background: white;
+			border: 1px solid #ddd;
+			border-radius: 8px;
+		}
+
+		.actions {
+			margin-top: 12px;
+		}
+
+		.actions a {
+			display: inline-block;
+			padding: 8px 12px;
+			background: #1f6feb;
+			color: white;
+			text-decoration: none;
+			border-radius: 6px;
+		}
+
+		.order-list {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+			gap: 12px;
+		}
+
+		.order-card {
+			display: block;
+			padding: 14px;
+			color: #222;
+			text-decoration: none;
+			background: #fafafa;
+			border: 1px solid #ddd;
+			border-radius: 8px;
+		}
+
+		.order-card:hover {
+			background: #eef5ff;
+			border-color: #1f6feb;
+		}
+
+		.order-card span {
+			display: block;
+			margin-top: 6px;
+			color: #666;
+			font-size: 13px;
+		}
+
+		.issue {
+			margin: 6px 0;
+			padding: 8px 10px;
+			border-radius: 6px;
+		}
+
+		.issue.error {
+			background: #ffe6e6;
+			border: 1px solid #ffb3b3;
+		}
+
+		.issue.warning {
+			background: #fff6d6;
+			border: 1px solid #ffe08a;
+		}
+
+		.svg-wrapper {
+			overflow: auto;
+			background: white;
+			border: 1px solid #ddd;
+			border-radius: 8px;
+			padding: 12px;
+		}
+	</style>"""
 
 
 def _render_metrics(preview: WebSvgPreview) -> str:
