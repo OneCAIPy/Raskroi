@@ -1,10 +1,17 @@
 from html import escape
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse, Response
 
 from cutting_app.app.examples.demo_cutting_orders import list_demo_cutting_orders
 from cutting_app.app.web.sample_preview import WebSvgPreview, build_sample_svg_preview
+
+from cutting_app.app.web.manual_cutting_form import (
+	build_manual_cutting_preview,
+	make_default_manual_cutting_form,
+	manual_cutting_form_from_urlencoded_body,
+)
+from cutting_app.app.web.manual_cutting_form_page import render_manual_cutting_form_page
 
 
 def create_app() -> FastAPI:
@@ -31,6 +38,18 @@ def create_app() -> FastAPI:
 				"Content-Disposition": f'attachment; filename="{filename}"',
 			},
 		)
+	
+	@app.get("/manual", response_class=HTMLResponse)
+	def show_manual_cutting_form() -> HTMLResponse:
+		return HTMLResponse(
+			content=render_manual_cutting_form_page(make_default_manual_cutting_form())
+		)
+
+	@app.post("/manual", response_class=HTMLResponse)
+	async def calculate_manual_cutting(request: Request) -> HTMLResponse:
+		form = manual_cutting_form_from_urlencoded_body(await request.body())
+		preview = build_manual_cutting_preview(form)
+		return HTMLResponse(content=render_manual_cutting_form_page(form, preview))
 
 	return app
 
@@ -63,6 +82,7 @@ def _render_demo_order_list_page() -> str:
 	<main>
 		<section class="panel">
 			<h2>Demo-заказы</h2>
+			<p><a href="/manual">Ручной ввод раскроя</a></p>
 			<p>Выбери сценарий, чтобы посмотреть карту раскроя и скачать SVG.</p>
 			<div class="order-list">
 				{items}
