@@ -5,6 +5,7 @@ from cutting_app.app.domain.placement import Rotation
 from cutting_app.app.domain.part import PartInput
 from cutting_app.app.domain.sheet import SheetInput, SheetMargins
 from cutting_app.app.services.guillotine_optimizer import optimize_guillotine_cutting
+from cutting_app.app.services.cutting_result_validator import validate_cutting_result
 
 
 def _part(
@@ -205,6 +206,56 @@ def test_exact_fit_leaf_is_part_not_waste():
 	assert sheet.waste_areas == []
 
 
+
+def test_terminal_trim_cut_keeps_area_balance():
+    result = optimize_guillotine_cutting(
+        parts=[_part("1", 98, 100, rotation_allowed=False)],
+        sheets=[SheetInput(name="Лист", width_mm=100, height_mm=100)],
+        settings=CutSettings(kerf_width_mm=4),
+    )
+
+    assert result.unplaced_parts == []
+    assert len(result.sheets) == 1
+
+    sheet = result.sheets[0]
+
+    assert sheet.metrics.placed_area_mm2 == 9800
+    assert sheet.metrics.waste_area_mm2 == 0
+    assert sheet.metrics.kerf_area_mm2 == 200
+    assert sheet.metrics.placed_area_mm2 + sheet.metrics.waste_area_mm2 + sheet.metrics.kerf_area_mm2 == sheet.metrics.usable_area_mm2
+
+    assert len(sheet.actual_cuts) == 1
+    assert sheet.actual_cuts[0].direction == CutDirection.VERTICAL
+    assert sheet.actual_cuts[0].kerf_width_mm == 2
+
+    issues = validate_cutting_result(result)
+
+    assert [issue.code for issue in issues] == []
+
+
+def test_regular_split_with_terminal_trim_keeps_area_balance():
+    result = optimize_guillotine_cutting(
+        parts=[_part("1", 50, 98, rotation_allowed=False)],
+        sheets=[SheetInput(name="Лист", width_mm=100, height_mm=100)],
+        settings=CutSettings(kerf_width_mm=4),
+    )
+
+    assert result.unplaced_parts == []
+    assert len(result.sheets) == 1
+
+    sheet = result.sheets[0]
+
+    assert sheet.metrics.placed_area_mm2 == 4900
+    assert sheet.metrics.waste_area_mm2 == 4600
+    assert sheet.metrics.kerf_area_mm2 == 500
+    assert sheet.metrics.placed_area_mm2 + sheet.metrics.waste_area_mm2 + sheet.metrics.kerf_area_mm2 == sheet.metrics.usable_area_mm2
+
+    cut_kerf_widths = [cut.kerf_width_mm for cut in sheet.actual_cuts]
+    assert cut_kerf_widths == [4, 2]
+
+    issues = validate_cutting_result(result)
+
+    assert [issue.code for issue in issues] == []
 def test_sheet_result_contains_actual_cut_segments_from_tree():
 	result = optimize_guillotine_cutting(
 		parts=[_part("1", 700, 200)],

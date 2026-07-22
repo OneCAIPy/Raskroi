@@ -303,8 +303,8 @@ def _place_candidate(
 				part_number=part_unit.unit_number,
 				kerf_width_mm=settings.kerf_width_mm,
 			)
-			working_sheet.free_nodes.append(_FreeNode(free_node.node.second))
-			working_sheet.free_nodes.append(_FreeNode(free_node.node.first.second))
+			_append_free_node_if_positive(working_sheet, free_node.node.second)
+			_append_free_node_if_positive(working_sheet, free_node.node.first.second)
 		else:
 			_apply_horizontal_first_two_step_split(
 				free_node=free_node,
@@ -314,8 +314,8 @@ def _place_candidate(
 				part_number=part_unit.unit_number,
 				kerf_width_mm=settings.kerf_width_mm,
 			)
-			working_sheet.free_nodes.append(_FreeNode(free_node.node.second))
-			working_sheet.free_nodes.append(_FreeNode(free_node.node.first.second))
+			_append_free_node_if_positive(working_sheet, free_node.node.second)
+			_append_free_node_if_positive(working_sheet, free_node.node.first.second)
 	elif right_area is not None:
 		_apply_single_vertical_split(
 			free_node=free_node,
@@ -324,7 +324,7 @@ def _place_candidate(
 			part_number=part_unit.unit_number,
 			kerf_width_mm=settings.kerf_width_mm,
 		)
-		working_sheet.free_nodes.append(_FreeNode(free_node.node.second))
+		_append_free_node_if_positive(working_sheet, free_node.node.second)
 	elif bottom_area is not None:
 		_apply_single_horizontal_split(
 			free_node=free_node,
@@ -333,7 +333,7 @@ def _place_candidate(
 			part_number=part_unit.unit_number,
 			kerf_width_mm=settings.kerf_width_mm,
 		)
-		working_sheet.free_nodes.append(_FreeNode(free_node.node.second))
+		_append_free_node_if_positive(working_sheet, free_node.node.second)
 	else:
 		free_node.node.part_number = part_unit.unit_number
 
@@ -415,148 +415,176 @@ def _make_split_areas(
 
 
 def _make_right_area(
-	area: RectArea,
-	part_width_mm: float,
-	part_height_mm: float,
-	kerf_width_mm: float,
-	strategy: SplitStrategy,
+    area: RectArea,
+    part_width_mm: float,
+    part_height_mm: float,
+    kerf_width_mm: float,
+    strategy: SplitStrategy,
 ) -> RectArea | None:
-	width_mm = area.width_mm - part_width_mm - kerf_width_mm
-	if width_mm <= 0:
-		return None
+    gap_width_mm = area.width_mm - part_width_mm
 
-	height_mm = area.height_mm
-	if strategy == SplitStrategy.HORIZONTAL_FIRST:
-		height_mm = part_height_mm
+    if gap_width_mm <= 0:
+        return None
 
-	return RectArea(
-		x_mm=area.x_mm + part_width_mm + kerf_width_mm,
-		y_mm=area.y_mm,
-		width_mm=width_mm,
-		height_mm=height_mm,
-	)
+    effective_kerf_width_mm = min(kerf_width_mm, gap_width_mm)
+    width_mm = gap_width_mm - effective_kerf_width_mm
+
+    height_mm = area.height_mm
+    if strategy == SplitStrategy.HORIZONTAL_FIRST:
+        height_mm = part_height_mm
+
+    return RectArea(
+        x_mm=area.x_mm + part_width_mm + effective_kerf_width_mm,
+        y_mm=area.y_mm,
+        width_mm=width_mm,
+        height_mm=height_mm,
+    )
 
 
 def _make_bottom_area(
-	area: RectArea,
-	part_width_mm: float,
-	part_height_mm: float,
-	kerf_width_mm: float,
-	strategy: SplitStrategy,
+    area: RectArea,
+    part_width_mm: float,
+    part_height_mm: float,
+    kerf_width_mm: float,
+    strategy: SplitStrategy,
 ) -> RectArea | None:
-	height_mm = area.height_mm - part_height_mm - kerf_width_mm
-	if height_mm <= 0:
-		return None
+    gap_height_mm = area.height_mm - part_height_mm
 
-	width_mm = part_width_mm
-	if strategy == SplitStrategy.HORIZONTAL_FIRST:
-		width_mm = area.width_mm
+    if gap_height_mm <= 0:
+        return None
 
-	return RectArea(
-		x_mm=area.x_mm,
-		y_mm=area.y_mm + part_height_mm + kerf_width_mm,
-		width_mm=width_mm,
-		height_mm=height_mm,
-	)
+    effective_kerf_width_mm = min(kerf_width_mm, gap_height_mm)
+    height_mm = gap_height_mm - effective_kerf_width_mm
 
+    width_mm = part_width_mm
+    if strategy == SplitStrategy.HORIZONTAL_FIRST:
+        width_mm = area.width_mm
+
+    return RectArea(
+        x_mm=area.x_mm,
+        y_mm=area.y_mm + part_height_mm + effective_kerf_width_mm,
+        width_mm=width_mm,
+        height_mm=height_mm,
+    )
+
+
+def _effective_vertical_kerf_width(area: RectArea, part_area: RectArea, kerf_width_mm: float) -> float:
+    gap_width_mm = area.right_mm - part_area.right_mm
+    return min(kerf_width_mm, max(0, gap_width_mm))
+
+
+def _effective_horizontal_kerf_width(area: RectArea, part_area: RectArea, kerf_width_mm: float) -> float:
+    gap_height_mm = area.bottom_mm - part_area.bottom_mm
+    return min(kerf_width_mm, max(0, gap_height_mm))
 
 def _apply_vertical_first_two_step_split(
-	free_node: _FreeNode,
-	part_area: RectArea,
-	right_area: RectArea,
-	bottom_area: RectArea,
-	part_number: str,
-	kerf_width_mm: float,
+    free_node: _FreeNode,
+    part_area: RectArea,
+    right_area: RectArea,
+    bottom_area: RectArea,
+    part_number: str,
+    kerf_width_mm: float,
 ) -> None:
-	area = free_node.node.area
-	left_strip = RectArea(
-		x_mm=area.x_mm,
-		y_mm=area.y_mm,
-		width_mm=part_area.width_mm,
-		height_mm=area.height_mm,
-	)
+    area = free_node.node.area
+    vertical_kerf_width_mm = _effective_vertical_kerf_width(area, part_area, kerf_width_mm)
+    horizontal_kerf_width_mm = _effective_horizontal_kerf_width(area, part_area, kerf_width_mm)
 
-	free_node.node.cut = CutLine(
-		direction=CutDirection.VERTICAL,
-		position_mm=area.x_mm + part_area.width_mm,
-		kerf_width_mm=kerf_width_mm,
-	)
-	free_node.node.first = CutNode(area=left_strip)
-	free_node.node.second = CutNode(area=right_area, is_waste=True)
+    left_strip = RectArea(
+        x_mm=area.x_mm,
+        y_mm=area.y_mm,
+        width_mm=part_area.width_mm,
+        height_mm=area.height_mm,
+    )
 
-	free_node.node.first.cut = CutLine(
-		direction=CutDirection.HORIZONTAL,
-		position_mm=area.y_mm + part_area.height_mm,
-		kerf_width_mm=kerf_width_mm,
-	)
-	free_node.node.first.first = CutNode(area=part_area, part_number=part_number)
-	free_node.node.first.second = CutNode(area=bottom_area, is_waste=True)
+    free_node.node.cut = CutLine(
+        direction=CutDirection.VERTICAL,
+        position_mm=area.x_mm + part_area.width_mm,
+        kerf_width_mm=vertical_kerf_width_mm,
+    )
+    free_node.node.first = CutNode(area=left_strip)
+    free_node.node.second = CutNode(area=right_area, is_waste=True)
+
+    free_node.node.first.cut = CutLine(
+        direction=CutDirection.HORIZONTAL,
+        position_mm=area.y_mm + part_area.height_mm,
+        kerf_width_mm=horizontal_kerf_width_mm,
+    )
+    free_node.node.first.first = CutNode(area=part_area, part_number=part_number)
+    free_node.node.first.second = CutNode(area=bottom_area, is_waste=True)
 
 
 def _apply_horizontal_first_two_step_split(
-	free_node: _FreeNode,
-	part_area: RectArea,
-	right_area: RectArea,
-	bottom_area: RectArea,
-	part_number: str,
-	kerf_width_mm: float,
+    free_node: _FreeNode,
+    part_area: RectArea,
+    right_area: RectArea,
+    bottom_area: RectArea,
+    part_number: str,
+    kerf_width_mm: float,
 ) -> None:
-	area = free_node.node.area
-	top_strip = RectArea(
-		x_mm=area.x_mm,
-		y_mm=area.y_mm,
-		width_mm=area.width_mm,
-		height_mm=part_area.height_mm,
-	)
+    area = free_node.node.area
+    horizontal_kerf_width_mm = _effective_horizontal_kerf_width(area, part_area, kerf_width_mm)
+    vertical_kerf_width_mm = _effective_vertical_kerf_width(area, part_area, kerf_width_mm)
 
-	free_node.node.cut = CutLine(
-		direction=CutDirection.HORIZONTAL,
-		position_mm=area.y_mm + part_area.height_mm,
-		kerf_width_mm=kerf_width_mm,
-	)
-	free_node.node.first = CutNode(area=top_strip)
-	free_node.node.second = CutNode(area=bottom_area, is_waste=True)
+    top_strip = RectArea(
+        x_mm=area.x_mm,
+        y_mm=area.y_mm,
+        width_mm=area.width_mm,
+        height_mm=part_area.height_mm,
+    )
 
-	free_node.node.first.cut = CutLine(
-		direction=CutDirection.VERTICAL,
-		position_mm=area.x_mm + part_area.width_mm,
-		kerf_width_mm=kerf_width_mm,
-	)
-	free_node.node.first.first = CutNode(area=part_area, part_number=part_number)
-	free_node.node.first.second = CutNode(area=right_area, is_waste=True)
+    free_node.node.cut = CutLine(
+        direction=CutDirection.HORIZONTAL,
+        position_mm=area.y_mm + part_area.height_mm,
+        kerf_width_mm=horizontal_kerf_width_mm,
+    )
+    free_node.node.first = CutNode(area=top_strip)
+    free_node.node.second = CutNode(area=bottom_area, is_waste=True)
+
+    free_node.node.first.cut = CutLine(
+        direction=CutDirection.VERTICAL,
+        position_mm=area.x_mm + part_area.width_mm,
+        kerf_width_mm=vertical_kerf_width_mm,
+    )
+    free_node.node.first.first = CutNode(area=part_area, part_number=part_number)
+    free_node.node.first.second = CutNode(area=right_area, is_waste=True)
 
 
 def _apply_single_vertical_split(
-	free_node: _FreeNode,
-	part_area: RectArea,
-	right_area: RectArea,
-	part_number: str,
-	kerf_width_mm: float,
+    free_node: _FreeNode,
+    part_area: RectArea,
+    right_area: RectArea,
+    part_number: str,
+    kerf_width_mm: float,
 ) -> None:
-	free_node.node.cut = CutLine(
-		direction=CutDirection.VERTICAL,
-		position_mm=part_area.x_mm + part_area.width_mm,
-		kerf_width_mm=kerf_width_mm,
-	)
-	free_node.node.first = CutNode(area=part_area, part_number=part_number)
-	free_node.node.second = CutNode(area=right_area, is_waste=True)
+    area = free_node.node.area
+    vertical_kerf_width_mm = _effective_vertical_kerf_width(area, part_area, kerf_width_mm)
+
+    free_node.node.cut = CutLine(
+        direction=CutDirection.VERTICAL,
+        position_mm=part_area.x_mm + part_area.width_mm,
+        kerf_width_mm=vertical_kerf_width_mm,
+    )
+    free_node.node.first = CutNode(area=part_area, part_number=part_number)
+    free_node.node.second = CutNode(area=right_area, is_waste=True)
 
 
 def _apply_single_horizontal_split(
-	free_node: _FreeNode,
-	part_area: RectArea,
-	bottom_area: RectArea,
-	part_number: str,
-	kerf_width_mm: float,
+    free_node: _FreeNode,
+    part_area: RectArea,
+    bottom_area: RectArea,
+    part_number: str,
+    kerf_width_mm: float,
 ) -> None:
-	free_node.node.cut = CutLine(
-		direction=CutDirection.HORIZONTAL,
-		position_mm=part_area.y_mm + part_area.height_mm,
-		kerf_width_mm=kerf_width_mm,
-	)
-	free_node.node.first = CutNode(area=part_area, part_number=part_number)
-	free_node.node.second = CutNode(area=bottom_area, is_waste=True)
+    area = free_node.node.area
+    horizontal_kerf_width_mm = _effective_horizontal_kerf_width(area, part_area, kerf_width_mm)
 
+    free_node.node.cut = CutLine(
+        direction=CutDirection.HORIZONTAL,
+        position_mm=part_area.y_mm + part_area.height_mm,
+        kerf_width_mm=horizontal_kerf_width_mm,
+    )
+    free_node.node.first = CutNode(area=part_area, part_number=part_number)
+    free_node.node.second = CutNode(area=bottom_area, is_waste=True)
 
 def _to_sheet_cut_result(working_sheet: _WorkingSheet) -> SheetCutResult:
 	waste_areas = [free_node.node.area for free_node in working_sheet.free_nodes]
