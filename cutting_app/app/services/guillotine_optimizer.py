@@ -352,6 +352,16 @@ def _place_candidate(
 		)
 	)
 
+def _append_free_node_if_positive(
+	working_sheet: _WorkingSheet,
+	node: CutNode,
+) -> None:
+	if node.area.width_mm <= 0 or node.area.height_mm <= 0:
+		return
+
+	working_sheet.free_nodes.append(_FreeNode(node))
+
+
 
 def _select_split_strategy(
 	area: RectArea,
