@@ -152,6 +152,8 @@ cutting_app/
 - `TZ.md`
 - `DECISIONS.md`
 - `BACKLOG.md`
+- `TEST_CASES.md`
+- `BASIS_AGT_3019_REFERENCE.md`
 - `PROJECT_INSTRUCTIONS.md`
 - пример `.CUT`
 - пример `.xbir`
