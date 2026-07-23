@@ -228,6 +228,14 @@ def test_terminal_trim_cut_keeps_area_balance():
     assert sheet.actual_cuts[0].direction == CutDirection.VERTICAL
     assert sheet.actual_cuts[0].kerf_width_mm == 2
 
+    plan = sheet.production_cut_plan
+
+    assert plan is not None
+    assert plan.metrics.pass_count == 1
+    assert plan.metrics.cut_length_mm == 100
+    assert plan.metrics.nominal_cut_area_mm2 == 400
+    assert plan.metrics.actual_removed_area_mm2 == 200
+
     issues = validate_cutting_result(result)
 
     assert [issue.code for issue in issues] == []
@@ -282,6 +290,53 @@ def test_sheet_result_contains_actual_cut_segments_from_tree():
 	assert second_cut.x2_mm == 700
 	assert second_cut.y2_mm == 200
 	assert second_cut.kerf_width_mm == 4
+
+
+def test_sheet_result_contains_production_plan_from_full_sheet():
+	result = optimize_guillotine_cutting(
+		parts=[_part("1", 700, 200, rotation_allowed=False)],
+		sheets=[SheetInput(name="Лист", width_mm=1000, height_mm=800)],
+		settings=CutSettings(kerf_width_mm=4),
+	)
+
+	plan = result.sheets[0].production_cut_plan
+
+	assert plan is not None
+	assert plan.source_area.width_mm == 1000
+	assert plan.source_area.height_mm == 800
+	assert plan.metrics.cycle_count == 2
+	assert plan.metrics.pass_count == 2
+	assert plan.metrics.cut_length_mm == 1200
+	assert plan.metrics.nominal_cut_area_mm2 == 4800
+	assert plan.metrics.actual_removed_area_mm2 == 4800
+
+
+def test_production_plan_includes_sheet_margin_trims():
+	result = optimize_guillotine_cutting(
+		parts=[_part("1", 100, 100, rotation_allowed=False)],
+		sheets=[
+			SheetInput(
+				name="Лист",
+				width_mm=1000,
+				height_mm=1000,
+				margins=SheetMargins(
+					left_mm=10,
+					top_mm=20,
+					right_mm=10,
+					bottom_mm=20,
+				),
+			)
+		],
+		settings=CutSettings(kerf_width_mm=4),
+	)
+
+	plan = result.sheets[0].production_cut_plan
+
+	assert plan is not None
+	assert plan.metrics.cycle_count == 2
+	assert plan.metrics.pass_count == 4
+	assert plan.metrics.cut_length_mm == 2200
+	assert plan.metrics.nominal_cut_area_mm2 == 8800
 
 
 def test_exact_fit_sheet_result_has_no_actual_cuts():

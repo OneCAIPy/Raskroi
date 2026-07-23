@@ -16,6 +16,8 @@ def build_parallel_cutting_cycle(
 	outputs: list[CuttingCycleOutput],
 	nominal_kerf_width_mm: float,
 	tolerance_mm: float = 0.001,
+	parent_cycle_id: str | None = None,
+	source_output_id: str | None = None,
 ) -> CuttingCycle:
 	_validate_cycle_input(
 		cycle_id=cycle_id,
@@ -50,6 +52,8 @@ def build_parallel_cutting_cycle(
 		outputs=sorted_outputs,
 		saw_passes=saw_passes,
 		metrics=_calculate_cycle_metrics(saw_passes),
+		parent_cycle_id=parent_cycle_id,
+		source_output_id=source_output_id,
 	)
 
 

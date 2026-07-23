@@ -16,6 +16,7 @@ from cutting_app.app.domain.part import PartInput
 from cutting_app.app.domain.placement import Rotation
 from cutting_app.app.domain.sheet import SheetInput
 from cutting_app.app.services.placement_calculator import calculate_placed_dimensions
+from cutting_app.app.services.production_cut_plan_builder import build_production_cut_plan
 from cutting_app.app.services.sheet_calculator import calculate_usable_sheet_area
 from cutting_app.app.services.size_calculator import calculate_part_sizes
 
@@ -98,7 +99,11 @@ def optimize_guillotine_cutting(
 				)
 			)
 
-	sheet_results = [_to_sheet_cut_result(sheet) for sheet in working_sheets if sheet.placed_parts]
+	sheet_results = [
+		_to_sheet_cut_result(sheet, settings)
+		for sheet in working_sheets
+		if sheet.placed_parts
+	]
 
 	return CuttingResult(
 		sheets=sheet_results,
@@ -596,9 +601,27 @@ def _apply_single_horizontal_split(
     free_node.node.first = CutNode(area=part_area, part_number=part_number)
     free_node.node.second = CutNode(area=bottom_area, is_waste=True)
 
-def _to_sheet_cut_result(working_sheet: _WorkingSheet) -> SheetCutResult:
+def _to_sheet_cut_result(
+	working_sheet: _WorkingSheet,
+	settings: CutSettings,
+) -> SheetCutResult:
 	waste_areas = [free_node.node.area for free_node in working_sheet.free_nodes]
 	actual_cuts = _collect_actual_cuts(working_sheet.root)
+	production_cut_plan = build_production_cut_plan(
+		plan_id=working_sheet.name,
+		sheet_area=RectArea(
+			x_mm=0,
+			y_mm=0,
+			width_mm=working_sheet.sheet.width_mm,
+			height_mm=working_sheet.sheet.height_mm,
+		),
+		root=working_sheet.root,
+		nominal_kerf_width_mm=settings.kerf_width_mm,
+		# Если дерево не содержит ни одного реза, направление нельзя восстановить
+		# из геометрии. До появления настройки используем стабильный технический
+		# порядок: сначала вертикальный цикл, затем горизонтальный.
+		initial_direction=CutDirection.VERTICAL,
+	)
 
 	return SheetCutResult(
 		sheet_name=working_sheet.name,
@@ -608,6 +631,7 @@ def _to_sheet_cut_result(working_sheet: _WorkingSheet) -> SheetCutResult:
 		placed_parts=working_sheet.placed_parts,
 		waste_areas=waste_areas,
 		actual_cuts=actual_cuts,
+		production_cut_plan=production_cut_plan,
 		metrics=_calculate_sheet_metrics(
 			sheet_width_mm=working_sheet.sheet.width_mm,
 			sheet_height_mm=working_sheet.sheet.height_mm,

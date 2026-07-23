@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from cutting_app.app.domain.cut_tree import CutDirection, CutNode, RectArea
 from cutting_app.app.domain.edge import EdgeSet
 from cutting_app.app.domain.placement import Rotation
+from cutting_app.app.domain.production_cut_plan import ProductionCutPlan
 
 
 @dataclass(frozen=True)
@@ -71,6 +72,7 @@ class SheetCutResult:
 	waste_areas: list[RectArea] = field(default_factory=list)
 	actual_cuts: list[ActualCut] = field(default_factory=list)
 	metrics: SheetCutMetrics = field(default_factory=SheetCutMetrics)
+	production_cut_plan: ProductionCutPlan | None = None
 
 
 @dataclass(frozen=True)

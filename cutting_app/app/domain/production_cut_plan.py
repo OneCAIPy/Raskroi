@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 
 from cutting_app.app.domain.cut_tree import CutDirection, RectArea
@@ -14,6 +14,8 @@ class SawPassType(str, Enum):
 class CuttingCycleOutput:
 	output_id: str
 	area: RectArea
+	part_number: str | None = None
+	is_waste: bool = False
 
 
 @dataclass(frozen=True)
@@ -62,3 +64,22 @@ class CuttingCycle:
 	outputs: tuple[CuttingCycleOutput, ...]
 	saw_passes: tuple[SawPass, ...]
 	metrics: CuttingCycleMetrics
+	parent_cycle_id: str | None = None
+	source_output_id: str | None = None
+
+
+@dataclass(frozen=True)
+class ProductionCutPlanMetrics:
+	cycle_count: int = 0
+	pass_count: int = 0
+	cut_length_mm: float = 0
+	nominal_cut_area_mm2: float = 0
+	actual_removed_area_mm2: float = 0
+
+
+@dataclass(frozen=True)
+class ProductionCutPlan:
+	plan_id: str
+	source_area: RectArea
+	cycles: tuple[CuttingCycle, ...] = ()
+	metrics: ProductionCutPlanMetrics = field(default_factory=ProductionCutPlanMetrics)

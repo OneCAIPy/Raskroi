@@ -107,6 +107,17 @@ def test_internal_gap_must_fit_the_full_nominal_kerf():
 		)
 
 
+def test_start_trim_must_fit_the_full_nominal_kerf():
+	with pytest.raises(ValueError, match="начальной торцовки"):
+		build_parallel_cutting_cycle(
+			cycle_id="sheet-1",
+			source_area=RectArea(x_mm=0, y_mm=0, width_mm=100, height_mm=100),
+			direction=CutDirection.VERTICAL,
+			outputs=[_output("part-1", 2, 0, 98, 100)],
+			nominal_kerf_width_mm=4,
+		)
+
+
 def test_cycle_metrics_sum_start_split_and_end_passes():
 	cycle = build_parallel_cutting_cycle(
 		cycle_id="sheet-1",
