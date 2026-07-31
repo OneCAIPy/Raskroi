@@ -15,6 +15,10 @@ from cutting_app.app.domain.cutting_result import (
 from cutting_app.app.domain.part import PartInput
 from cutting_app.app.domain.placement import Rotation
 from cutting_app.app.domain.sheet import SheetInput
+from cutting_app.app.services.area_metrics_calculator import (
+	calculate_material_utilization_percent,
+	calculate_working_area_efficiency_percent,
+)
 from cutting_app.app.services.placement_calculator import calculate_placed_dimensions
 from cutting_app.app.services.production_cut_plan_builder import build_production_cut_plan
 from cutting_app.app.services.sheet_calculator import calculate_usable_sheet_area
@@ -699,7 +703,6 @@ def _calculate_sheet_metrics(
 	placed_area_mm2 = sum(part.width_mm * part.height_mm for part in placed_parts)
 	waste_area_mm2 = sum(area.width_mm * area.height_mm for area in waste_areas)
 	kerf_area_mm2 = sum(_actual_cut_length(cut) * cut.kerf_width_mm for cut in actual_cuts)
-	efficiency_percent = _calculate_efficiency_percent(placed_area_mm2, usable_area_mm2)
 
 	return SheetCutMetrics(
 		sheet_area_mm2=sheet_area_mm2,
@@ -707,7 +710,14 @@ def _calculate_sheet_metrics(
 		placed_area_mm2=placed_area_mm2,
 		waste_area_mm2=waste_area_mm2,
 		kerf_area_mm2=kerf_area_mm2,
-		efficiency_percent=efficiency_percent,
+		material_utilization_percent=calculate_material_utilization_percent(
+			placed_area_mm2=placed_area_mm2,
+			used_material_area_mm2=sheet_area_mm2,
+		),
+		working_area_efficiency_percent=calculate_working_area_efficiency_percent(
+			placed_area_mm2=placed_area_mm2,
+			working_area_mm2=usable_area_mm2,
+		),
 	)
 
 
@@ -730,7 +740,14 @@ def _calculate_cutting_metrics(
 		placed_area_mm2=placed_area_mm2,
 		waste_area_mm2=waste_area_mm2,
 		kerf_area_mm2=kerf_area_mm2,
-		efficiency_percent=_calculate_efficiency_percent(placed_area_mm2, usable_area_mm2),
+		material_utilization_percent=calculate_material_utilization_percent(
+			placed_area_mm2=placed_area_mm2,
+			used_material_area_mm2=sheet_area_mm2,
+		),
+		working_area_efficiency_percent=calculate_working_area_efficiency_percent(
+			placed_area_mm2=placed_area_mm2,
+			working_area_mm2=usable_area_mm2,
+		),
 	)
 
 
@@ -739,10 +756,3 @@ def _actual_cut_length(cut: ActualCut) -> float:
 		return cut.y2_mm - cut.y1_mm
 
 	return cut.x2_mm - cut.x1_mm
-
-
-def _calculate_efficiency_percent(placed_area_mm2: float, usable_area_mm2: float) -> float:
-	if usable_area_mm2 <= 0:
-		return 0
-
-	return placed_area_mm2 / usable_area_mm2 * 100

@@ -34,6 +34,9 @@ def test_manual_form_post_returns_svg_result() -> None:
 
 	assert response.status_code == 200
 	assert "Результат" in response.text
+	assert "КИМ по площади материала:" in response.text
+	assert "Заполнение рабочей области:" in response.text
+	assert "Эффективность:" not in response.text
 	assert "<svg" in response.text
 	assert "placed-part" in response.text
 

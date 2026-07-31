@@ -381,7 +381,8 @@ def test_sheet_result_contains_area_metrics():
 	assert metrics.placed_area_mm2 == 140000
 	assert metrics.waste_area_mm2 == 655200
 	assert metrics.kerf_area_mm2 == 4800
-	assert metrics.efficiency_percent == 17.5
+	assert metrics.material_utilization_percent == 17.5
+	assert metrics.working_area_efficiency_percent == 17.5
 	assert metrics.placed_area_mm2 + metrics.waste_area_mm2 + metrics.kerf_area_mm2 == metrics.usable_area_mm2
 
 
@@ -402,7 +403,22 @@ def test_cutting_result_contains_total_metrics_and_unplaced_count():
 	assert metrics.placed_area_mm2 == 140000
 	assert metrics.waste_area_mm2 == 655200
 	assert metrics.kerf_area_mm2 == 4800
-	assert metrics.efficiency_percent == 17.5
+	assert metrics.material_utilization_percent == 17.5
+	assert metrics.working_area_efficiency_percent == 17.5
+
+
+def test_material_utilization_uses_only_sheets_that_received_parts():
+	result = optimize_guillotine_cutting(
+		parts=[_part("1", 100, 100)],
+		sheets=[SheetInput(name="Лист", width_mm=1000, height_mm=1000, quantity=2)],
+		settings=CutSettings(kerf_width_mm=4),
+	)
+
+	metrics = result.metrics
+
+	assert metrics.sheet_count == 1
+	assert metrics.sheet_area_mm2 == 1000000
+	assert metrics.material_utilization_percent == 1
 
 
 def test_sheet_metrics_use_usable_area_inside_margins():
@@ -424,4 +440,6 @@ def test_sheet_metrics_use_usable_area_inside_margins():
 	assert metrics.sheet_area_mm2 == 1000000
 	assert metrics.usable_area_mm2 == 940800
 	assert metrics.placed_area_mm2 == 10000
+	assert metrics.material_utilization_percent == 1
+	assert metrics.working_area_efficiency_percent == 10000 / 940800 * 100
 	assert metrics.placed_area_mm2 + metrics.waste_area_mm2 + metrics.kerf_area_mm2 == metrics.usable_area_mm2

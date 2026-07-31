@@ -78,7 +78,8 @@ def test_non_error_demo_orders_can_be_optimized_without_unplaced_parts() -> None
 		assert result.metrics.unplaced_part_count == 0, order.name
 		assert result.metrics.placed_part_count == sum(part.quantity for part in order.parts), order.name
 		assert result.metrics.sheet_count >= 1, order.name
-		assert result.metrics.efficiency_percent > 0, order.name
+		assert result.metrics.material_utilization_percent > 0, order.name
+		assert result.metrics.working_area_efficiency_percent > 0, order.name
 
 
 def test_demo_order_with_unplaced_part_reports_one_unplaced_part() -> None:

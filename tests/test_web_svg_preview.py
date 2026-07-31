@@ -37,6 +37,9 @@ def test_preview_page_without_errors_displays_empty_message() -> None:
 
 	assert response.status_code == 200
 	assert "<svg" in response.text
+	assert "КИМ по площади материала:" in response.text
+	assert "Заполнение рабочей области:" in response.text
+	assert "Эффективность:" not in response.text
 	assert "Ошибок и предупреждений нет." in response.text
 
 

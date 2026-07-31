@@ -46,7 +46,8 @@ class SheetCutMetrics:
 	placed_area_mm2: float = 0
 	waste_area_mm2: float = 0
 	kerf_area_mm2: float = 0
-	efficiency_percent: float = 0
+	material_utilization_percent: float = 0
+	working_area_efficiency_percent: float = 0
 
 
 @dataclass(frozen=True)
@@ -59,7 +60,8 @@ class CuttingMetrics:
 	placed_area_mm2: float = 0
 	waste_area_mm2: float = 0
 	kerf_area_mm2: float = 0
-	efficiency_percent: float = 0
+	material_utilization_percent: float = 0
+	working_area_efficiency_percent: float = 0
 
 
 @dataclass(frozen=True)

@@ -240,7 +240,8 @@ def _render_metrics(preview: WebSvgPreview) -> str:
 		<li>Листов использовано: {metrics.sheet_count}</li>
 		<li>Деталей размещено: {metrics.placed_part_count}</li>
 		<li>Деталей не размещено: {metrics.unplaced_part_count}</li>
-		<li>Эффективность: {metrics.efficiency_percent:.2f}%</li>
+		<li>КИМ по площади материала: {metrics.material_utilization_percent:.2f}%</li>
+		<li>Заполнение рабочей области: {metrics.working_area_efficiency_percent:.2f}%</li>
 	</ul>
 	"""
 
