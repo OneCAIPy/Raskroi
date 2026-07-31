@@ -108,6 +108,23 @@ def test_part_is_placed_with_rotation_when_allowed():
 	assert result.unplaced_parts == []
 
 
+def test_finished_part_rotation_is_not_counted_as_strip_turn():
+	result = optimize_guillotine_cutting(
+		parts=[_part("1", 120, 50, rotation_allowed=True)],
+		sheets=[SheetInput(name="Лист", width_mm=50, height_mm=120)],
+		settings=CutSettings(kerf_width_mm=4),
+	)
+
+	sheet = result.sheets[0]
+	placed = sheet.placed_parts[0]
+	plan = sheet.production_cut_plan
+
+	assert placed.rotation == Rotation.DEG_90
+	assert plan is not None
+	assert plan.strip_turns == ()
+	assert plan.metrics.strip_turn_count == 0
+
+
 def test_equal_split_score_keeps_vertical_first_for_determinism():
 	result = optimize_guillotine_cutting(
 		parts=[_part("1", 400, 400)],

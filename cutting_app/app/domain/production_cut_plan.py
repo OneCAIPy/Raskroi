@@ -69,8 +69,22 @@ class CuttingCycle:
 
 
 @dataclass(frozen=True)
+class StripTurnEvent:
+	event_id: str
+	sequence_number: int
+	source_output_id: str
+	source_area: RectArea
+	from_cycle_id: str
+	to_cycle_id: str
+	from_direction: CutDirection
+	to_direction: CutDirection
+	angle_degrees: int = 90
+
+
+@dataclass(frozen=True)
 class ProductionCutPlanMetrics:
 	cycle_count: int = 0
+	strip_turn_count: int = 0
 	pass_count: int = 0
 	cut_length_mm: float = 0
 	nominal_cut_area_mm2: float = 0
@@ -82,4 +96,5 @@ class ProductionCutPlan:
 	plan_id: str
 	source_area: RectArea
 	cycles: tuple[CuttingCycle, ...] = ()
+	strip_turns: tuple[StripTurnEvent, ...] = ()
 	metrics: ProductionCutPlanMetrics = field(default_factory=ProductionCutPlanMetrics)

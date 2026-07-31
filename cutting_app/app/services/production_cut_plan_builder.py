@@ -6,8 +6,12 @@ from cutting_app.app.domain.production_cut_plan import (
 	CuttingCycleOutput,
 	ProductionCutPlan,
 	ProductionCutPlanMetrics,
+	StripTurnEvent,
 )
 from cutting_app.app.services.cutting_cycle_builder import build_parallel_cutting_cycle
+from cutting_app.app.services.strip_turn_event_builder import (
+	build_strip_turn_events,
+)
 
 
 @dataclass(frozen=True)
@@ -60,12 +64,21 @@ def build_production_cut_plan(
 		initial_direction=initial_direction,
 	)
 	cycles = tuple(state.cycles)
+	strip_turns = build_strip_turn_events(
+		plan_id=plan_id,
+		cycles=cycles,
+		tolerance_mm=tolerance_mm,
+	)
 
 	return ProductionCutPlan(
 		plan_id=plan_id,
 		source_area=sheet_area,
 		cycles=cycles,
-		metrics=_calculate_plan_metrics(cycles),
+		strip_turns=strip_turns,
+		metrics=_calculate_plan_metrics(
+			cycles=cycles,
+			strip_turns=strip_turns,
+		),
 	)
 
 
@@ -263,10 +276,13 @@ def _opposite_direction(direction: CutDirection) -> CutDirection:
 
 
 def _calculate_plan_metrics(
+	*,
 	cycles: tuple[CuttingCycle, ...],
+	strip_turns: tuple[StripTurnEvent, ...],
 ) -> ProductionCutPlanMetrics:
 	return ProductionCutPlanMetrics(
 		cycle_count=len(cycles),
+		strip_turn_count=len(strip_turns),
 		pass_count=sum(cycle.metrics.pass_count for cycle in cycles),
 		cut_length_mm=sum(cycle.metrics.cut_length_mm for cycle in cycles),
 		nominal_cut_area_mm2=sum(cycle.metrics.nominal_cut_area_mm2 for cycle in cycles),

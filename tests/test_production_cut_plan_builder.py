@@ -101,6 +101,7 @@ def test_plan_uses_full_sheet_for_trims_and_links_nested_cycle():
 	)
 
 	assert plan.metrics.cycle_count == 2
+	assert plan.metrics.strip_turn_count == 1
 	assert plan.metrics.pass_count == 4
 	assert plan.metrics.cut_length_mm == 320
 	assert plan.metrics.nominal_cut_area_mm2 == 1280
@@ -132,6 +133,18 @@ def test_plan_uses_full_sheet_for_trims_and_links_nested_cycle():
 	assert second_cycle.source_output_id == first_cycle.outputs[0].output_id
 	assert [saw_pass.length_mm for saw_pass in second_cycle.saw_passes] == [60, 60]
 
+	assert len(plan.strip_turns) == 1
+
+	strip_turn = plan.strip_turns[0]
+
+	assert strip_turn.source_output_id == second_cycle.source_output_id
+	assert strip_turn.source_area == second_cycle.source_area
+	assert strip_turn.from_cycle_id == first_cycle.cycle_id
+	assert strip_turn.to_cycle_id == second_cycle.cycle_id
+	assert strip_turn.from_direction == CutDirection.HORIZONTAL
+	assert strip_turn.to_direction == CutDirection.VERTICAL
+	assert strip_turn.angle_degrees == 90
+
 
 def test_exact_usable_leaf_uses_explicit_initial_direction_for_sheet_trims():
 	root = CutNode(
@@ -152,5 +165,6 @@ def test_exact_usable_leaf_uses_explicit_initial_direction_for_sheet_trims():
 		CutDirection.VERTICAL,
 	]
 	assert plan.metrics.cycle_count == 2
+	assert plan.metrics.strip_turn_count == 1
 	assert plan.metrics.pass_count == 4
 	assert plan.metrics.cut_length_mm == 320
