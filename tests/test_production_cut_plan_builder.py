@@ -48,8 +48,10 @@ def test_same_direction_tree_chain_becomes_one_parallel_cycle():
 	)
 
 	assert plan.metrics.cycle_count == 1
+	assert plan.metrics.size_setting_count == 1
 	assert plan.metrics.pass_count == 2
 	assert plan.metrics.cut_length_mm == 200
+	assert [setting.size_mm for setting in plan.size_settings] == [30]
 
 	cycle = plan.cycles[0]
 
@@ -102,6 +104,7 @@ def test_plan_uses_full_sheet_for_trims_and_links_nested_cycle():
 
 	assert plan.metrics.cycle_count == 2
 	assert plan.metrics.strip_turn_count == 1
+	assert plan.metrics.size_setting_count == 2
 	assert plan.metrics.pass_count == 4
 	assert plan.metrics.cut_length_mm == 320
 	assert plan.metrics.nominal_cut_area_mm2 == 1280
@@ -134,6 +137,7 @@ def test_plan_uses_full_sheet_for_trims_and_links_nested_cycle():
 	assert [saw_pass.length_mm for saw_pass in second_cycle.saw_passes] == [60, 60]
 
 	assert len(plan.strip_turns) == 1
+	assert [setting.size_mm for setting in plan.size_settings] == [60, 40]
 
 	strip_turn = plan.strip_turns[0]
 
@@ -166,5 +170,7 @@ def test_exact_usable_leaf_uses_explicit_initial_direction_for_sheet_trims():
 	]
 	assert plan.metrics.cycle_count == 2
 	assert plan.metrics.strip_turn_count == 1
+	assert plan.metrics.size_setting_count == 2
 	assert plan.metrics.pass_count == 4
 	assert plan.metrics.cut_length_mm == 320
+	assert [setting.size_mm for setting in plan.size_settings] == [60, 80]

@@ -249,6 +249,7 @@ def test_terminal_trim_cut_keeps_area_balance():
 
     assert plan is not None
     assert plan.metrics.pass_count == 1
+    assert plan.metrics.size_setting_count == 1
     assert plan.metrics.cut_length_mm == 100
     assert plan.metrics.nominal_cut_area_mm2 == 400
     assert plan.metrics.actual_removed_area_mm2 == 200

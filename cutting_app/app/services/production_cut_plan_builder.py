@@ -6,9 +6,13 @@ from cutting_app.app.domain.production_cut_plan import (
 	CuttingCycleOutput,
 	ProductionCutPlan,
 	ProductionCutPlanMetrics,
+	SizeSettingEvent,
 	StripTurnEvent,
 )
 from cutting_app.app.services.cutting_cycle_builder import build_parallel_cutting_cycle
+from cutting_app.app.services.size_setting_event_builder import (
+	build_size_setting_events,
+)
 from cutting_app.app.services.strip_turn_event_builder import (
 	build_strip_turn_events,
 )
@@ -69,15 +73,22 @@ def build_production_cut_plan(
 		cycles=cycles,
 		tolerance_mm=tolerance_mm,
 	)
+	size_settings = build_size_setting_events(
+		plan_id=plan_id,
+		cycles=cycles,
+		tolerance_mm=tolerance_mm,
+	)
 
 	return ProductionCutPlan(
 		plan_id=plan_id,
 		source_area=sheet_area,
 		cycles=cycles,
 		strip_turns=strip_turns,
+		size_settings=size_settings,
 		metrics=_calculate_plan_metrics(
 			cycles=cycles,
 			strip_turns=strip_turns,
+			size_settings=size_settings,
 		),
 	)
 
@@ -279,10 +290,12 @@ def _calculate_plan_metrics(
 	*,
 	cycles: tuple[CuttingCycle, ...],
 	strip_turns: tuple[StripTurnEvent, ...],
+	size_settings: tuple[SizeSettingEvent, ...],
 ) -> ProductionCutPlanMetrics:
 	return ProductionCutPlanMetrics(
 		cycle_count=len(cycles),
 		strip_turn_count=len(strip_turns),
+		size_setting_count=len(size_settings),
 		pass_count=sum(cycle.metrics.pass_count for cycle in cycles),
 		cut_length_mm=sum(cycle.metrics.cut_length_mm for cycle in cycles),
 		nominal_cut_area_mm2=sum(cycle.metrics.nominal_cut_area_mm2 for cycle in cycles),
