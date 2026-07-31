@@ -405,6 +405,38 @@ def test_production_plan_includes_sheet_margin_trims():
 	assert plan.metrics.nominal_cut_area_mm2 == 8800
 
 
+def test_exact_usable_part_uses_initial_cut_direction_from_settings():
+	result = optimize_guillotine_cutting(
+		parts=[_part("1", 80, 60, rotation_allowed=False)],
+		sheets=[
+			SheetInput(
+				name="Лист",
+				width_mm=100,
+				height_mm=100,
+				margins=SheetMargins(
+					left_mm=10,
+					top_mm=20,
+					right_mm=10,
+					bottom_mm=20,
+				),
+			)
+		],
+		settings=CutSettings(
+			kerf_width_mm=4,
+			initial_cut_direction=CutDirection.HORIZONTAL,
+		),
+	)
+
+	plan = result.sheets[0].production_cut_plan
+
+	assert plan is not None
+	assert [cycle.direction for cycle in plan.cycles] == [
+		CutDirection.HORIZONTAL,
+		CutDirection.VERTICAL,
+	]
+	assert plan.metrics.pass_count == 4
+
+
 def test_exact_fit_sheet_result_has_no_actual_cuts():
 	result = optimize_guillotine_cutting(
 		parts=[_part("1", 1000, 1000, rotation_allowed=False)],

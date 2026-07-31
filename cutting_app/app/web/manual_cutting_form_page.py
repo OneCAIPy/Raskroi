@@ -47,6 +47,13 @@ def _render_form(form: ManualCuttingFormData) -> str:
 		<label>Ширина пропила, мм
 			<input name="kerf_width_mm" value="{escape(form.kerf_width_mm)}" inputmode="decimal">
 		</label>
+		<label>Первое направление при раскрое без разделительных резов
+			<select name="initial_cut_direction">
+				<option value="vertical"{_selected(form.initial_cut_direction, "vertical")}>Вертикальные проходы первыми</option>
+				<option value="horizontal"{_selected(form.initial_cut_direction, "horizontal")}>Горизонтальные проходы первыми</option>
+			</select>
+		</label>
+		<p class="hint">Используется, когда одна деталь точно занимает всю рабочую область, а порядок торцовок нельзя восстановить из дерева резов.</p>
 	</fieldset>
 
 	<fieldset>
@@ -73,6 +80,12 @@ def _render_form(form: ManualCuttingFormData) -> str:
 
 	<button type="submit">Рассчитать</button>
 </form>"""
+
+
+def _selected(value: str, option: str) -> str:
+	if value == option:
+		return " selected"
+	return ""
 
 
 def _render_preview(preview: ManualCuttingPreview | None) -> str:
@@ -170,7 +183,8 @@ def _render_styles() -> str:
 		margin: 8px 16px 8px 0;
 		font-weight: 600;
 	}
-	input {
+	input,
+	select {
 		width: 140px;
 		padding: 8px;
 		border: 1px solid #bbb;

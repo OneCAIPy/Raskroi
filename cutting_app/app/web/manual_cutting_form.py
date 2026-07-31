@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from urllib.parse import parse_qs
 
 from cutting_app.app.domain.cut_settings import CutSettings
+from cutting_app.app.domain.cut_tree import CutDirection
 from cutting_app.app.domain.cutting_result import CuttingResult
 from cutting_app.app.domain.result_issue import ResultIssue
 from cutting_app.app.domain.sheet import SheetInput, SheetMargins
@@ -27,6 +28,7 @@ class ManualCuttingFormData:
 	margin_right_mm: str
 	margin_bottom_mm: str
 	parts_text: str
+	initial_cut_direction: str = CutDirection.VERTICAL.value
 
 
 @dataclass(frozen=True)
@@ -43,6 +45,7 @@ class _ParsedManualForm:
 	sheet_height_mm: float
 	sheet_quantity: int
 	kerf_width_mm: float
+	initial_cut_direction: CutDirection
 	margins: SheetMargins
 	errors: list[str]
 
@@ -58,6 +61,7 @@ def make_default_manual_cutting_form() -> ManualCuttingFormData:
 		margin_right_mm="10",
 		margin_bottom_mm="10",
 		parts_text=DEFAULT_PARTS_TEXT,
+		initial_cut_direction=CutDirection.VERTICAL.value,
 	)
 
 
@@ -74,6 +78,11 @@ def manual_cutting_form_from_urlencoded_body(body: bytes) -> ManualCuttingFormDa
 		margin_right_mm=_first(values, "margin_right_mm", default_form.margin_right_mm),
 		margin_bottom_mm=_first(values, "margin_bottom_mm", default_form.margin_bottom_mm),
 		parts_text=_first(values, "parts_text", default_form.parts_text),
+		initial_cut_direction=_first(
+			values,
+			"initial_cut_direction",
+			default_form.initial_cut_direction,
+		),
 	)
 
 
@@ -105,7 +114,10 @@ def build_manual_cutting_preview(form: ManualCuttingFormData) -> ManualCuttingPr
 		quantity=parsed_form.sheet_quantity,
 		margins=parsed_form.margins,
 	)
-	settings = CutSettings(kerf_width_mm=parsed_form.kerf_width_mm)
+	settings = CutSettings(
+		kerf_width_mm=parsed_form.kerf_width_mm,
+		initial_cut_direction=parsed_form.initial_cut_direction,
+	)
 	result = optimize_guillotine_cutting(
 		parts=parts_result.parts,
 		sheets=[sheet],
@@ -129,6 +141,10 @@ def _parse_manual_form(form: ManualCuttingFormData) -> _ParsedManualForm:
 	sheet_height_mm = _parse_float(form.sheet_height_mm, "Высота листа", errors, min_value=0, include_min=False)
 	sheet_quantity = _parse_int(form.sheet_quantity, "Количество листов", errors, min_value=0, include_min=False)
 	kerf_width_mm = _parse_float(form.kerf_width_mm, "Ширина пропила", errors, min_value=0, include_min=True)
+	initial_cut_direction = _parse_initial_cut_direction(
+		form.initial_cut_direction,
+		errors,
+	)
 	margin_left_mm = _parse_float(form.margin_left_mm, "Отступ слева", errors, min_value=0, include_min=True)
 	margin_top_mm = _parse_float(form.margin_top_mm, "Отступ сверху", errors, min_value=0, include_min=True)
 	margin_right_mm = _parse_float(form.margin_right_mm, "Отступ справа", errors, min_value=0, include_min=True)
@@ -139,6 +155,7 @@ def _parse_manual_form(form: ManualCuttingFormData) -> _ParsedManualForm:
 		sheet_height_mm=sheet_height_mm,
 		sheet_quantity=sheet_quantity,
 		kerf_width_mm=kerf_width_mm,
+		initial_cut_direction=initial_cut_direction,
 		margins=SheetMargins(
 			left_mm=margin_left_mm,
 			top_mm=margin_top_mm,
@@ -147,6 +164,19 @@ def _parse_manual_form(form: ManualCuttingFormData) -> _ParsedManualForm:
 		),
 		errors=errors,
 	)
+
+
+def _parse_initial_cut_direction(
+	value: str,
+	errors: list[str],
+) -> CutDirection:
+	try:
+		return CutDirection(value.strip().lower())
+	except ValueError:
+		errors.append(
+			"Первое направление резов: выбери вертикальное или горизонтальное."
+		)
+		return CutDirection.VERTICAL
 
 
 def _first(values: dict[str, list[str]], name: str, default: str) -> str:

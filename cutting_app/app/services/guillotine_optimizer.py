@@ -638,10 +638,7 @@ def _to_sheet_cut_result(
 		),
 		root=working_sheet.root,
 		nominal_kerf_width_mm=settings.kerf_width_mm,
-		# Если дерево не содержит ни одного реза, направление нельзя восстановить
-		# из геометрии. До появления настройки используем стабильный технический
-		# порядок: сначала вертикальный цикл, затем горизонтальный.
-		initial_direction=CutDirection.VERTICAL,
+		initial_direction=settings.initial_cut_direction,
 	)
 
 	return SheetCutResult(

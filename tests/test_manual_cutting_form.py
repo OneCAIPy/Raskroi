@@ -40,6 +40,7 @@ def test_manual_cutting_preview_reports_input_errors_without_svg() -> None:
 def test_manual_cutting_form_from_urlencoded_body_reads_posted_values() -> None:
 	body = (
 		"sheet_width_mm=1000&sheet_height_mm=800&sheet_quantity=2&kerf_width_mm=3&"
+		"initial_cut_direction=horizontal&"
 		"margin_left_mm=1&margin_top_mm=2&margin_right_mm=3&margin_bottom_mm=4&"
 		"parts_text=A1%3B+Part%3B+100%3B+50%3B+1"
 	).encode("utf-8")
@@ -48,5 +49,28 @@ def test_manual_cutting_form_from_urlencoded_body_reads_posted_values() -> None:
 
 	assert form.sheet_width_mm == "1000"
 	assert form.sheet_quantity == "2"
+	assert form.initial_cut_direction == "horizontal"
 	assert form.margin_bottom_mm == "4"
 	assert form.parts_text == "A1; Part; 100; 50; 1"
+
+
+def test_manual_cutting_preview_reports_invalid_initial_cut_direction() -> None:
+	default_form = make_default_manual_cutting_form()
+	form = ManualCuttingFormData(
+		sheet_width_mm=default_form.sheet_width_mm,
+		sheet_height_mm=default_form.sheet_height_mm,
+		sheet_quantity=default_form.sheet_quantity,
+		kerf_width_mm=default_form.kerf_width_mm,
+		margin_left_mm=default_form.margin_left_mm,
+		margin_top_mm=default_form.margin_top_mm,
+		margin_right_mm=default_form.margin_right_mm,
+		margin_bottom_mm=default_form.margin_bottom_mm,
+		parts_text=default_form.parts_text,
+		initial_cut_direction="diagonal",
+	)
+
+	preview = build_manual_cutting_preview(form)
+
+	assert preview.result is None
+	assert preview.svg is None
+	assert any("Первое направление" in error for error in preview.input_errors)

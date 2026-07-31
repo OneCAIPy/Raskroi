@@ -10,6 +10,8 @@ def test_manual_form_page_is_available() -> None:
 
 	assert response.status_code == 200
 	assert "Ручной ввод раскроя" in response.text
+	assert 'name="initial_cut_direction"' in response.text
+	assert 'value="vertical" selected' in response.text
 	assert "textarea" in response.text
 	assert "Рассчитать" in response.text
 
@@ -24,6 +26,7 @@ def test_manual_form_post_returns_svg_result() -> None:
 			"sheet_height_mm": "800",
 			"sheet_quantity": "1",
 			"kerf_width_mm": "4",
+			"initial_cut_direction": "horizontal",
 			"margin_left_mm": "0",
 			"margin_top_mm": "0",
 			"margin_right_mm": "0",
@@ -39,6 +42,7 @@ def test_manual_form_post_returns_svg_result() -> None:
 	assert "Длина кромки: 0.000 м" in response.text
 	assert "Длина кромки со свесом: 0.000 м" in response.text
 	assert "Отрезов кромки: 0" in response.text
+	assert 'value="horizontal" selected' in response.text
 	assert "Эффективность:" not in response.text
 	assert "<svg" in response.text
 	assert "placed-part" in response.text
