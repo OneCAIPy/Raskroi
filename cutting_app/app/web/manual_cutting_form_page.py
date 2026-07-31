@@ -108,6 +108,7 @@ def _render_metrics(preview: ManualCuttingPreview) -> str:
 		return ""
 
 	metrics = preview.result.metrics
+	edge_consumption = preview.result.edge_consumption
 	return f"""
 <ul>
 	<li>Листов использовано: {metrics.sheet_count}</li>
@@ -115,6 +116,9 @@ def _render_metrics(preview: ManualCuttingPreview) -> str:
 	<li>Деталей не размещено: {metrics.unplaced_part_count}</li>
 	<li>КИМ по площади материала: {metrics.material_utilization_percent:.2f}%</li>
 	<li>Заполнение рабочей области: {metrics.working_area_efficiency_percent:.2f}%</li>
+	<li>Длина кромки: {edge_consumption.base_length_mm / 1000:.3f} м</li>
+	<li>Длина кромки со свесом: {edge_consumption.total_length_mm / 1000:.3f} м</li>
+	<li>Отрезов кромки: {edge_consumption.segment_count}</li>
 </ul>"""
 
 

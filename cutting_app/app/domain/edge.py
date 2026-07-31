@@ -14,6 +14,7 @@ class EdgeSpec:
 	thickness_mm: float = 0.0
 	trimming_allowance_mm: float = 0.0
 	tape_overhang_mm: float = 0.0
+	material_name: str = ""
 
 	@property
 	def has_edge(self) -> bool:

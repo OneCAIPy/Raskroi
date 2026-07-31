@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 
 from cutting_app.app.domain.cut_tree import CutDirection, CutNode, RectArea
 from cutting_app.app.domain.edge import EdgeSet
+from cutting_app.app.domain.edge_consumption import EdgeConsumption
 from cutting_app.app.domain.placement import Rotation
 from cutting_app.app.domain.production_cut_plan import ProductionCutPlan
 
@@ -75,6 +76,7 @@ class SheetCutResult:
 	actual_cuts: list[ActualCut] = field(default_factory=list)
 	metrics: SheetCutMetrics = field(default_factory=SheetCutMetrics)
 	production_cut_plan: ProductionCutPlan | None = None
+	edge_consumption: EdgeConsumption = field(default_factory=EdgeConsumption)
 
 
 @dataclass(frozen=True)
@@ -82,3 +84,4 @@ class CuttingResult:
 	sheets: list[SheetCutResult] = field(default_factory=list)
 	unplaced_parts: list[UnplacedPart] = field(default_factory=list)
 	metrics: CuttingMetrics = field(default_factory=CuttingMetrics)
+	edge_consumption: EdgeConsumption = field(default_factory=EdgeConsumption)

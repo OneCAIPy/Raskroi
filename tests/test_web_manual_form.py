@@ -36,6 +36,9 @@ def test_manual_form_post_returns_svg_result() -> None:
 	assert "Результат" in response.text
 	assert "КИМ по площади материала:" in response.text
 	assert "Заполнение рабочей области:" in response.text
+	assert "Длина кромки: 0.000 м" in response.text
+	assert "Длина кромки со свесом: 0.000 м" in response.text
+	assert "Отрезов кромки: 0" in response.text
 	assert "Эффективность:" not in response.text
 	assert "<svg" in response.text
 	assert "placed-part" in response.text

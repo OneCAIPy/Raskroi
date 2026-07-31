@@ -12,12 +12,17 @@ from cutting_app.app.domain.cutting_result import (
 	SheetCutResult,
 	UnplacedPart,
 )
+from cutting_app.app.domain.edge_consumption import EdgeSegment
 from cutting_app.app.domain.part import PartInput
 from cutting_app.app.domain.placement import Rotation
 from cutting_app.app.domain.sheet import SheetInput
 from cutting_app.app.services.area_metrics_calculator import (
 	calculate_material_utilization_percent,
 	calculate_working_area_efficiency_percent,
+)
+from cutting_app.app.services.edge_consumption_calculator import (
+	build_part_edge_segments,
+	summarize_edge_segments,
 )
 from cutting_app.app.services.placement_calculator import calculate_placed_dimensions
 from cutting_app.app.services.production_cut_plan_builder import build_production_cut_plan
@@ -49,6 +54,7 @@ class _WorkingSheet:
 	free_nodes: list[_FreeNode] = field(default_factory=list)
 	placed_parts: list[PlacedPart] = field(default_factory=list)
 	waste_areas: list[RectArea] = field(default_factory=list)
+	edge_segments: list[EdgeSegment] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
@@ -113,6 +119,11 @@ def optimize_guillotine_cutting(
 		sheets=sheet_results,
 		unplaced_parts=unplaced_parts,
 		metrics=_calculate_cutting_metrics(sheet_results, unplaced_parts),
+		edge_consumption=summarize_edge_segments(
+			segment
+			for sheet in sheet_results
+			for segment in sheet.edge_consumption.segments
+		),
 	)
 
 
@@ -358,6 +369,12 @@ def _place_candidate(
 			height_mm=part_area.height_mm,
 			rotation=candidate.rotation,
 			edges=part_unit.part.edges,
+		)
+	)
+	working_sheet.edge_segments.extend(
+		build_part_edge_segments(
+			part=part_unit.part,
+			part_number=part_unit.unit_number,
 		)
 	)
 
@@ -636,6 +653,7 @@ def _to_sheet_cut_result(
 		waste_areas=waste_areas,
 		actual_cuts=actual_cuts,
 		production_cut_plan=production_cut_plan,
+		edge_consumption=summarize_edge_segments(working_sheet.edge_segments),
 		metrics=_calculate_sheet_metrics(
 			sheet_width_mm=working_sheet.sheet.width_mm,
 			sheet_height_mm=working_sheet.sheet.height_mm,

@@ -1,6 +1,6 @@
 from cutting_app.app.domain.cut_settings import CutSettings
 from cutting_app.app.domain.cut_tree import CutDirection
-from cutting_app.app.domain.edge import EdgeSet
+from cutting_app.app.domain.edge import EdgeSet, EdgeSpec
 from cutting_app.app.domain.placement import Rotation
 from cutting_app.app.domain.part import PartInput
 from cutting_app.app.domain.sheet import SheetInput, SheetMargins
@@ -123,6 +123,54 @@ def test_finished_part_rotation_is_not_counted_as_strip_turn():
 	assert plan is not None
 	assert plan.strip_turns == ()
 	assert plan.metrics.strip_turn_count == 0
+
+
+def test_finished_part_rotation_does_not_change_edge_consumption():
+	part = PartInput(
+		number="1",
+		name="Поворачиваемая деталь",
+		l_mm=120,
+		w_mm=50,
+		quantity=1,
+		edges=EdgeSet(
+			L1=EdgeSpec(thickness_mm=1, material_name="ABS 1 мм"),
+			W1=EdgeSpec(thickness_mm=2, material_name="ABS 2 мм"),
+		),
+		rotation_allowed=True,
+	)
+
+	result = optimize_guillotine_cutting(
+		parts=[part],
+		sheets=[SheetInput(name="Лист", width_mm=50, height_mm=120)],
+		settings=CutSettings(kerf_width_mm=4),
+	)
+
+	assert result.sheets[0].placed_parts[0].rotation == Rotation.DEG_90
+	assert result.edge_consumption.segment_count == 2
+	assert result.edge_consumption.base_length_mm == 170
+	assert result.edge_consumption.total_length_mm == 170
+
+
+def test_unplaced_part_does_not_add_production_edge_consumption():
+	part = PartInput(
+		number="1",
+		name="Слишком большая деталь",
+		l_mm=200,
+		w_mm=200,
+		quantity=1,
+		edges=EdgeSet(L1=EdgeSpec(thickness_mm=1)),
+		rotation_allowed=False,
+	)
+
+	result = optimize_guillotine_cutting(
+		parts=[part],
+		sheets=[SheetInput(name="Лист", width_mm=100, height_mm=100)],
+		settings=CutSettings(kerf_width_mm=4),
+	)
+
+	assert result.metrics.unplaced_part_count == 1
+	assert result.edge_consumption.segment_count == 0
+	assert result.edge_consumption.total_length_mm == 0
 
 
 def test_equal_split_score_keeps_vertical_first_for_determinism():
