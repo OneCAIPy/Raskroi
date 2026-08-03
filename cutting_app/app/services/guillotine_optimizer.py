@@ -22,7 +22,7 @@ from cutting_app.app.domain.optimization import (
 )
 from cutting_app.app.domain.part import PartInput
 from cutting_app.app.domain.placement import Rotation
-from cutting_app.app.domain.sheet import SheetInput
+from cutting_app.app.domain.sheet import SheetInput, SheetMargins
 from cutting_app.app.services.area_metrics_calculator import (
 	calculate_material_utilization_percent,
 	calculate_working_area_efficiency_percent,
@@ -47,6 +47,9 @@ from cutting_app.app.services.size_calculator import calculate_part_sizes
 class SplitStrategy(str, Enum):
 	VERTICAL_FIRST = "vertical_first"
 	HORIZONTAL_FIRST = "horizontal_first"
+
+
+_MAX_LOCAL_REBUILD_SUFFIX_SHEETS = 7
 
 
 @dataclass(frozen=True)
@@ -92,7 +95,7 @@ def optimize_guillotine_cutting(
 	settings: CutSettings,
 ) -> CuttingResult:
 	variants = build_default_optimization_variants()
-	evaluated = [
+	base_evaluated = [
 		EvaluatedCuttingVariant(
 			variant_id=variant.variant_id,
 			technical_order=variant.technical_order,
@@ -105,8 +108,16 @@ def optimize_guillotine_cutting(
 		)
 		for variant in variants
 	]
+	base_result = select_best_cutting_variant(base_evaluated)
+	local_evaluated = _build_local_rebuild_candidates(
+		parts=parts,
+		settings=settings,
+		variants=variants,
+		seed_result=base_result,
+		technical_order_start=len(base_evaluated),
+	)
 
-	return select_best_cutting_variant(evaluated)
+	return select_best_cutting_variant([*base_evaluated, *local_evaluated])
 
 
 def _optimize_guillotine_cutting_variant(
@@ -115,8 +126,21 @@ def _optimize_guillotine_cutting_variant(
 	settings: CutSettings,
 	variant: OptimizationVariant,
 ) -> CuttingResult:
-	working_sheets = _create_working_sheets(sheets)
-	part_units = _expand_and_sort_parts(parts, variant.part_ordering)
+	return _optimize_part_units_variant(
+		part_units=_expand_parts(parts),
+		working_sheets=_create_working_sheets(sheets),
+		settings=settings,
+		variant=variant,
+	)
+
+
+def _optimize_part_units_variant(
+	part_units: list[_PartUnit],
+	working_sheets: list[_WorkingSheet],
+	settings: CutSettings,
+	variant: OptimizationVariant,
+) -> CuttingResult:
+	part_units = _sort_part_units(part_units, variant.part_ordering)
 	unplaced_parts: list[UnplacedPart] = []
 
 	for part_unit in part_units:
@@ -170,32 +194,173 @@ def _optimize_guillotine_cutting_variant(
 	)
 
 
+def _build_local_rebuild_candidates(
+	parts: list[PartInput],
+	settings: CutSettings,
+	variants: tuple[OptimizationVariant, ...],
+	seed_result: CuttingResult,
+	technical_order_start: int,
+) -> list[EvaluatedCuttingVariant]:
+	if seed_result.unplaced_parts or len(seed_result.sheets) < 3:
+		return []
+
+	part_units_by_number = _build_unique_part_unit_lookup(parts)
+	if part_units_by_number is None:
+		return []
+	max_suffix_size = min(
+		_MAX_LOCAL_REBUILD_SUFFIX_SHEETS,
+		len(seed_result.sheets) - 1,
+	)
+	seed_variant_id = _selected_variant_id(seed_result)
+	candidates: list[EvaluatedCuttingVariant] = []
+
+	for suffix_size in range(2, max_suffix_size + 1):
+		suffix_sheets = seed_result.sheets[-suffix_size:]
+		part_units = [
+			part_units_by_number[placed_part.part_number]
+			for sheet in suffix_sheets
+			for placed_part in sheet.placed_parts
+		]
+		rebuild_slots = suffix_sheets[:-1]
+
+		for variant in variants:
+			rebuilt_suffix = _optimize_part_units_variant(
+				part_units=part_units,
+				working_sheets=_create_rebuild_working_sheets(rebuild_slots),
+				settings=settings,
+				variant=variant,
+			)
+			candidate_result = _combine_rebuilt_suffix(
+				seed_result=seed_result,
+				suffix_size=suffix_size,
+				rebuilt_suffix=rebuilt_suffix,
+			)
+			candidates.append(
+				EvaluatedCuttingVariant(
+					variant_id=_make_local_rebuild_variant_id(
+						suffix_size=suffix_size,
+						seed_variant_id=seed_variant_id,
+						rebuild_variant_id=variant.variant_id,
+					),
+					technical_order=technical_order_start + len(candidates),
+					result=candidate_result,
+				)
+			)
+
+	return candidates
+
+
+def _build_unique_part_unit_lookup(
+	parts: list[PartInput],
+) -> dict[str, _PartUnit] | None:
+	part_units_by_number: dict[str, _PartUnit] = {}
+	for part_unit in _expand_parts(parts):
+		if part_unit.unit_number in part_units_by_number:
+			return None
+		part_units_by_number[part_unit.unit_number] = part_unit
+	return part_units_by_number
+
+
+def _selected_variant_id(result: CuttingResult) -> str:
+	if result.optimization is None:
+		raise ValueError("Для локальной перестройки отсутствуют сведения о базовом варианте.")
+	return result.optimization.selected_variant_id
+
+
+def _create_rebuild_working_sheets(
+	sheet_slots: list[SheetCutResult],
+) -> list[_WorkingSheet]:
+	return [
+		_create_working_sheet(
+			sheet=_sheet_input_from_result(sheet_result),
+			name=sheet_result.sheet_name,
+		)
+		for sheet_result in sheet_slots
+	]
+
+
+def _sheet_input_from_result(sheet_result: SheetCutResult) -> SheetInput:
+	usable_area = sheet_result.root.area
+	return SheetInput(
+		name=sheet_result.sheet_name,
+		width_mm=sheet_result.sheet_width_mm,
+		height_mm=sheet_result.sheet_height_mm,
+		margins=SheetMargins(
+			left_mm=usable_area.x_mm,
+			top_mm=usable_area.y_mm,
+			right_mm=sheet_result.sheet_width_mm - usable_area.right_mm,
+			bottom_mm=sheet_result.sheet_height_mm - usable_area.bottom_mm,
+		),
+	)
+
+
+def _combine_rebuilt_suffix(
+	seed_result: CuttingResult,
+	suffix_size: int,
+	rebuilt_suffix: CuttingResult,
+) -> CuttingResult:
+	sheets = [
+		*seed_result.sheets[:-suffix_size],
+		*rebuilt_suffix.sheets,
+	]
+	unplaced_parts = rebuilt_suffix.unplaced_parts
+
+	return CuttingResult(
+		sheets=sheets,
+		unplaced_parts=unplaced_parts,
+		metrics=_calculate_cutting_metrics(sheets, unplaced_parts),
+		edge_consumption=summarize_edge_segments(
+			segment
+			for sheet in sheets
+			for segment in sheet.edge_consumption.segments
+		),
+	)
+
+
+def _make_local_rebuild_variant_id(
+	suffix_size: int,
+	seed_variant_id: str,
+	rebuild_variant_id: str,
+) -> str:
+	return (
+		f"local_suffix_{suffix_size}_to_{suffix_size - 1}"
+		f"__seed_{seed_variant_id}"
+		f"__rebuild_{rebuild_variant_id}"
+	)
+
+
 def _create_working_sheets(sheets: list[SheetInput]) -> list[_WorkingSheet]:
 	working_sheets: list[_WorkingSheet] = []
 
 	for sheet in _sort_sheets(sheets):
 		for copy_index in range(sheet.quantity):
-			usable_area = calculate_usable_sheet_area(sheet)
-			root = CutNode(
-				area=RectArea(
-					x_mm=usable_area.x_mm,
-					y_mm=usable_area.y_mm,
-					width_mm=usable_area.width_mm,
-					height_mm=usable_area.height_mm,
-				),
-				is_waste=True,
-			)
-			name = _make_sheet_copy_name(sheet, copy_index)
 			working_sheets.append(
-				_WorkingSheet(
+				_create_working_sheet(
 					sheet=sheet,
-					name=name,
-					root=root,
-					free_nodes=[_FreeNode(root)],
+					name=_make_sheet_copy_name(sheet, copy_index),
 				)
 			)
 
 	return working_sheets
+
+
+def _create_working_sheet(sheet: SheetInput, name: str) -> _WorkingSheet:
+	usable_area = calculate_usable_sheet_area(sheet)
+	root = CutNode(
+		area=RectArea(
+			x_mm=usable_area.x_mm,
+			y_mm=usable_area.y_mm,
+			width_mm=usable_area.width_mm,
+			height_mm=usable_area.height_mm,
+		),
+		is_waste=True,
+	)
+	return _WorkingSheet(
+		sheet=sheet,
+		name=name,
+		root=root,
+		free_nodes=[_FreeNode(root)],
+	)
 
 
 def _sort_sheets(sheets: list[SheetInput]) -> list[SheetInput]:
@@ -219,6 +384,10 @@ def _expand_and_sort_parts(
 	parts: list[PartInput],
 	part_ordering: PartOrdering,
 ) -> list[_PartUnit]:
+	return _sort_part_units(_expand_parts(parts), part_ordering)
+
+
+def _expand_parts(parts: list[PartInput]) -> list[_PartUnit]:
 	part_units: list[_PartUnit] = []
 
 	for part in parts:
@@ -226,6 +395,13 @@ def _expand_and_sort_parts(
 			unit_number = part.number if part.quantity == 1 else f"{part.number}-{copy_index + 1}"
 			part_units.append(_PartUnit(part=part, unit_number=unit_number))
 
+	return part_units
+
+
+def _sort_part_units(
+	part_units: list[_PartUnit],
+	part_ordering: PartOrdering,
+) -> list[_PartUnit]:
 	return sorted(
 		part_units,
 		key=lambda part_unit: _part_sort_key(

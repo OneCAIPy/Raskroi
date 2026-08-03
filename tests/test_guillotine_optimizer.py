@@ -550,7 +550,43 @@ def test_multi_pass_optimization_is_deterministic() -> None:
 	assert first.optimization.evaluated_variant_count == 24
 
 
-def test_basis_reference_multi_pass_places_all_parts_without_exceeding_14_sheets() -> None:
+def test_local_suffix_rebuild_reduces_sheet_count() -> None:
+	parts = [
+		_part(str(index), l_mm, w_mm)
+		for index, (l_mm, w_mm) in enumerate(
+			(
+				(54, 66),
+				(74, 30),
+				(58, 54),
+				(50, 74),
+				(26, 70),
+				(34, 78),
+				(70, 66),
+				(42, 34),
+				(34, 38),
+				(46, 78),
+			),
+			start=1,
+		)
+	]
+
+	result = optimize_guillotine_cutting(
+		parts=parts,
+		sheets=[SheetInput(name="Лист", width_mm=100, height_mm=100, quantity=8)],
+		settings=CutSettings(kerf_width_mm=2),
+	)
+
+	assert result.metrics.placed_part_count == 10
+	assert result.metrics.unplaced_part_count == 0
+	assert result.metrics.sheet_count == 4
+	assert result.optimization is not None
+	assert result.optimization.evaluated_variant_count == 96
+	assert result.optimization.selected_variant_id.startswith(
+		"local_suffix_3_to_2__"
+	)
+
+
+def test_basis_reference_local_rebuild_reaches_13_sheets() -> None:
 	result = optimize_guillotine_cutting(
 		parts=build_basis_agt_3019_parts(),
 		sheets=build_basis_agt_3019_sheets(),
@@ -559,6 +595,31 @@ def test_basis_reference_multi_pass_places_all_parts_without_exceeding_14_sheets
 
 	assert result.metrics.placed_part_count == 93
 	assert result.metrics.unplaced_part_count == 0
-	assert result.metrics.sheet_count <= 14
+	assert result.metrics.sheet_count == 13
+	assert round(result.metrics.material_utilization_percent, 2) == 88.28
+	assert round(result.metrics.working_area_efficiency_percent, 2) == 90.72
 	assert result.optimization is not None
-	assert result.optimization.evaluated_variant_count == 24
+	assert result.optimization.evaluated_variant_count == 168
+	assert result.optimization.selected_variant_id.startswith(
+		"local_suffix_7_to_6__"
+	)
+	placed_part_numbers = [
+		part.part_number
+		for sheet in result.sheets
+		for part in sheet.placed_parts
+	]
+	assert len(set(placed_part_numbers)) == 93
+	assert result.edge_consumption.segment_count == 372
+	assert result.edge_consumption.total_length_mm == 261526
+
+	production_metrics = [
+		sheet.production_cut_plan.metrics
+		for sheet in result.sheets
+		if sheet.production_cut_plan is not None
+	]
+
+	assert sum(metrics.cut_length_mm for metrics in production_metrics) == 214108
+	assert sum(metrics.pass_count for metrics in production_metrics) == 236
+	assert sum(metrics.strip_turn_count for metrics in production_metrics) == 97
+	assert sum(metrics.size_setting_count for metrics in production_metrics) == 157
+	assert validate_cutting_result(result) == []
