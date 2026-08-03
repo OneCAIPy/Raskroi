@@ -13,6 +13,13 @@ from cutting_app.app.domain.cutting_result import (
 	UnplacedPart,
 )
 from cutting_app.app.domain.edge_consumption import EdgeSegment
+from cutting_app.app.domain.optimization import (
+	OptimizationVariant,
+	PartOrdering,
+	PlacementHeuristic,
+	RotationPreference,
+	SplitHeuristic,
+)
 from cutting_app.app.domain.part import PartInput
 from cutting_app.app.domain.placement import Rotation
 from cutting_app.app.domain.sheet import SheetInput
@@ -23,6 +30,13 @@ from cutting_app.app.services.area_metrics_calculator import (
 from cutting_app.app.services.edge_consumption_calculator import (
 	build_part_edge_segments,
 	summarize_edge_segments,
+)
+from cutting_app.app.services.cutting_variant_selector import (
+	EvaluatedCuttingVariant,
+	select_best_cutting_variant,
+)
+from cutting_app.app.services.guillotine_optimization_variants import (
+	build_default_optimization_variants,
 )
 from cutting_app.app.services.placement_calculator import calculate_placed_dimensions
 from cutting_app.app.services.production_cut_plan_builder import build_production_cut_plan
@@ -77,15 +91,44 @@ def optimize_guillotine_cutting(
 	sheets: list[SheetInput],
 	settings: CutSettings,
 ) -> CuttingResult:
+	variants = build_default_optimization_variants()
+	evaluated = [
+		EvaluatedCuttingVariant(
+			variant_id=variant.variant_id,
+			technical_order=variant.technical_order,
+			result=_optimize_guillotine_cutting_variant(
+				parts=parts,
+				sheets=sheets,
+				settings=settings,
+				variant=variant,
+			),
+		)
+		for variant in variants
+	]
+
+	return select_best_cutting_variant(evaluated)
+
+
+def _optimize_guillotine_cutting_variant(
+	parts: list[PartInput],
+	sheets: list[SheetInput],
+	settings: CutSettings,
+	variant: OptimizationVariant,
+) -> CuttingResult:
 	working_sheets = _create_working_sheets(sheets)
-	part_units = _expand_and_sort_parts(parts)
+	part_units = _expand_and_sort_parts(parts, variant.part_ordering)
 	unplaced_parts: list[UnplacedPart] = []
 
 	for part_unit in part_units:
 		placed = False
 
 		for working_sheet in working_sheets:
-			candidate = _find_best_candidate(working_sheet, part_unit.part, settings)
+			candidate = _find_best_candidate(
+				working_sheet,
+				part_unit.part,
+				settings,
+				variant,
+			)
 			if candidate is None:
 				continue
 
@@ -172,7 +215,10 @@ def _make_sheet_copy_name(sheet: SheetInput, copy_index: int) -> str:
 	return f"{sheet.name} #{copy_index + 1}"
 
 
-def _expand_and_sort_parts(parts: list[PartInput]) -> list[_PartUnit]:
+def _expand_and_sort_parts(
+	parts: list[PartInput],
+	part_ordering: PartOrdering,
+) -> list[_PartUnit]:
 	part_units: list[_PartUnit] = []
 
 	for part in parts:
@@ -182,15 +228,30 @@ def _expand_and_sort_parts(parts: list[PartInput]) -> list[_PartUnit]:
 
 	return sorted(
 		part_units,
-		key=lambda part_unit: _part_sort_key(part_unit.part, part_unit.unit_number),
+		key=lambda part_unit: _part_sort_key(
+			part_unit.part,
+			part_unit.unit_number,
+			part_ordering,
+		),
 	)
 
 
-def _part_sort_key(part: PartInput, unit_number: str) -> tuple[float, float, float, str]:
+def _part_sort_key(
+	part: PartInput,
+	unit_number: str,
+	part_ordering: PartOrdering,
+) -> tuple[float, float, float, str]:
 	sizes = calculate_part_sizes(part)
 	area = sizes.cutting_l_mm * sizes.cutting_w_mm
 	long_side = max(sizes.cutting_l_mm, sizes.cutting_w_mm)
 	short_side = min(sizes.cutting_l_mm, sizes.cutting_w_mm)
+
+	if part_ordering == PartOrdering.LONG_SIDE_DESC:
+		return (-long_side, -area, -short_side, unit_number)
+
+	if part_ordering == PartOrdering.SHORT_SIDE_DESC:
+		return (-short_side, -area, -long_side, unit_number)
+
 	return (-area, -long_side, -short_side, unit_number)
 
 
@@ -198,6 +259,7 @@ def _find_best_candidate(
 	working_sheet: _WorkingSheet,
 	part: PartInput,
 	settings: CutSettings,
+	variant: OptimizationVariant,
 ) -> _PlacementCandidate | None:
 	part_sizes = calculate_part_sizes(part)
 	candidates: list[_PlacementCandidate] = []
@@ -219,6 +281,7 @@ def _find_best_candidate(
 						part_width_mm=dimensions.width_mm,
 						part_height_mm=dimensions.height_mm,
 						kerf_width_mm=settings.kerf_width_mm,
+						split_heuristic=variant.split_heuristic,
 					),
 				)
 			)
@@ -228,7 +291,12 @@ def _find_best_candidate(
 
 	return min(
 		candidates,
-		key=lambda candidate: _score_placement_candidate(candidate, settings.kerf_width_mm),
+		key=lambda candidate: _score_placement_candidate(
+			candidate,
+			settings.kerf_width_mm,
+			variant.placement_heuristic,
+			variant.rotation_preference,
+		),
 	)
 
 
@@ -256,7 +324,9 @@ def _fits(area: RectArea, width_mm: float, height_mm: float) -> bool:
 def _score_placement_candidate(
 	candidate: _PlacementCandidate,
 	kerf_width_mm: float,
-) -> tuple[float, float, float, float, float, float, int, int]:
+	placement_heuristic: PlacementHeuristic,
+	rotation_preference: RotationPreference,
+) -> tuple[float, ...]:
 	area = candidate.free_node.node.area
 	area_excess = area.width_mm * area.height_mm - candidate.width_mm * candidate.height_mm
 	width_gap = area.width_mm - candidate.width_mm
@@ -270,8 +340,25 @@ def _score_placement_candidate(
 		kerf_width_mm=kerf_width_mm,
 		strategy=candidate.split_strategy,
 	)[0]
-	rotation_order = 0 if candidate.rotation == Rotation.DEG_0 else 1
+	preferred_rotation = (
+		Rotation.DEG_0
+		if rotation_preference == RotationPreference.UNROTATED_FIRST
+		else Rotation.DEG_90
+	)
+	rotation_order = 0 if candidate.rotation == preferred_rotation else 1
 	split_order = 0 if candidate.split_strategy == SplitStrategy.VERTICAL_FIRST else 1
+
+	if placement_heuristic == PlacementHeuristic.BEST_SHORT_SIDE_FIT:
+		return (
+			short_gap,
+			long_gap,
+			area_excess,
+			kerf_loss_area,
+			rotation_order,
+			area.y_mm,
+			area.x_mm,
+			split_order,
+		)
 
 	return (
 		area_excess,
@@ -394,11 +481,19 @@ def _select_split_strategy(
 	part_width_mm: float,
 	part_height_mm: float,
 	kerf_width_mm: float,
+	split_heuristic: SplitHeuristic,
 ) -> SplitStrategy:
 	if _make_right_area(area, part_width_mm, part_height_mm, kerf_width_mm, SplitStrategy.VERTICAL_FIRST) is None:
 		return SplitStrategy.HORIZONTAL_FIRST
 	if _make_bottom_area(area, part_width_mm, part_height_mm, kerf_width_mm, SplitStrategy.HORIZONTAL_FIRST) is None:
 		return SplitStrategy.VERTICAL_FIRST
+
+	if split_heuristic == SplitHeuristic.SHORTER_LEFTOVER_AXIS:
+		width_gap_mm = area.width_mm - part_width_mm
+		height_gap_mm = area.height_mm - part_height_mm
+		if width_gap_mm <= height_gap_mm:
+			return SplitStrategy.VERTICAL_FIRST
+		return SplitStrategy.HORIZONTAL_FIRST
 
 	return min(
 		[SplitStrategy.VERTICAL_FIRST, SplitStrategy.HORIZONTAL_FIRST],

@@ -5,6 +5,7 @@ from cutting_app.app.services.edge_consumption_calculator import (
 	build_part_edge_segments,
 	summarize_edge_segments,
 )
+from tests.basis_agt_3019_fixture import build_basis_agt_3019_parts
 
 
 def test_edge_consumption_uses_logical_final_sizes_and_adds_overhang_once() -> None:
@@ -89,26 +90,12 @@ def test_part_without_edges_has_empty_consumption() -> None:
 def test_basis_reference_order_has_261526_mm_and_372_edge_segments() -> None:
 	segments = []
 
-	for position, l_mm, w_mm, quantity in _basis_reference_parts():
-		part = PartInput(
-			number=position,
-			name=f"Позиция {position}",
-			l_mm=l_mm,
-			w_mm=w_mm,
-			quantity=quantity,
-			edges=EdgeSet(
-				L1=_basis_edge(),
-				L2=_basis_edge(),
-				W1=_basis_edge(),
-				W2=_basis_edge(),
-			),
-		)
-
-		for copy_index in range(quantity):
+	for part in build_basis_agt_3019_parts():
+		for copy_index in range(part.quantity):
 			segments.extend(
 				build_part_edge_segments(
 					part=part,
-					part_number=f"{position}-{copy_index + 1}",
+					part_number=f"{part.number}-{copy_index + 1}",
 				)
 			)
 
@@ -127,70 +114,4 @@ def test_basis_reference_order_has_261526_mm_and_372_edge_segments() -> None:
 			overhang_length_mm=0,
 			total_length_mm=261526,
 		),
-	)
-
-
-def _basis_edge() -> EdgeSpec:
-	return EdgeSpec(
-		thickness_mm=1,
-		trimming_allowance_mm=0.5,
-		material_name="3019 АГТ Кромка Abs 22*1",
-	)
-
-
-def _basis_reference_parts() -> tuple[tuple[str, float, float, int], ...]:
-	return (
-		("1", 401, 801, 2),
-		("2", 264, 401, 2),
-		("3", 264, 765, 1),
-		("4", 258, 759, 1),
-		("5", 1314, 768, 1),
-		("6", 514, 768, 1),
-		("7", 2397, 597, 2),
-		("8", 694, 427, 1),
-		("9", 694, 432, 2),
-		("10", 2000, 97, 1),
-		("11", 500, 97, 1),
-		("12", 1797, 400, 1),
-		("13", 1300, 450, 1),
-		("14", 915, 560, 2),
-		("15", 2043, 580, 2),
-		("16", 360, 516, 2),
-		("17", 750, 447, 1),
-		("18", 750, 597, 1),
-		("19", 750, 100, 1),
-		("20", 150, 597, 1),
-		("21", 360, 597, 4),
-		("22", 750, 200, 1),
-		("23", 426, 683, 1),
-		("24", 483, 683, 1),
-		("25", 972, 347, 2),
-		("26", 972, 597, 4),
-		("27", 972, 475, 1),
-		("28", 483, 697, 1),
-		("29", 483, 597, 4),
-		("30", 483, 475, 1),
-		("31", 1700, 597, 1),
-		("32", 2110, 200, 1),
-		("33", 1601, 310, 1),
-		("34", 362, 289, 2),
-		("35", 359, 530, 3),
-		("36", 197, 397, 8),
-		("37", 754, 468, 2),
-		("38", 940, 300, 1),
-		("39", 300, 165, 1),
-		("40", 2287, 492, 1),
-		("41", 2287, 493, 4),
-		("42", 2287, 100, 1),
-		("43", 2287, 526, 1),
-		("44", 597, 492, 1),
-		("45", 597, 493, 4),
-		("46", 597, 100, 1),
-		("47", 597, 526, 1),
-		("48", 2297, 492, 4),
-		("49", 2297, 100, 1),
-		("50", 2297, 200, 1),
-		("51", 597, 492, 4),
-		("52", 597, 100, 1),
-		("53", 597, 200, 1),
 	)

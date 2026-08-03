@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from cutting_app.app.domain.cut_tree import CutDirection, CutNode, RectArea
 from cutting_app.app.domain.edge import EdgeSet
 from cutting_app.app.domain.edge_consumption import EdgeConsumption
+from cutting_app.app.domain.optimization import OptimizationSummary
 from cutting_app.app.domain.placement import Rotation
 from cutting_app.app.domain.production_cut_plan import ProductionCutPlan
 
@@ -85,3 +86,4 @@ class CuttingResult:
 	unplaced_parts: list[UnplacedPart] = field(default_factory=list)
 	metrics: CuttingMetrics = field(default_factory=CuttingMetrics)
 	edge_consumption: EdgeConsumption = field(default_factory=EdgeConsumption)
+	optimization: OptimizationSummary | None = None

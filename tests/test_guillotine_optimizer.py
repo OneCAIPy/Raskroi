@@ -6,6 +6,11 @@ from cutting_app.app.domain.part import PartInput
 from cutting_app.app.domain.sheet import SheetInput, SheetMargins
 from cutting_app.app.services.guillotine_optimizer import optimize_guillotine_cutting
 from cutting_app.app.services.cutting_result_validator import validate_cutting_result
+from tests.basis_agt_3019_fixture import (
+	build_basis_agt_3019_parts,
+	build_basis_agt_3019_settings,
+	build_basis_agt_3019_sheets,
+)
 
 
 def _part(
@@ -189,7 +194,7 @@ def test_equal_split_score_keeps_vertical_first_for_determinism():
 
 def test_horizontal_first_split_can_be_chosen_to_reduce_actual_kerf_loss():
 	result = optimize_guillotine_cutting(
-		parts=[_part("1", 700, 200)],
+		parts=[_part("1", 700, 200, rotation_allowed=False)],
 		sheets=[SheetInput(name="Лист", width_mm=1000, height_mm=800)],
 		settings=CutSettings(kerf_width_mm=4),
 	)
@@ -332,7 +337,7 @@ def test_regular_split_with_terminal_trim_keeps_area_balance():
     assert [issue.code for issue in issues] == []
 def test_sheet_result_contains_actual_cut_segments_from_tree():
 	result = optimize_guillotine_cutting(
-		parts=[_part("1", 700, 200)],
+		parts=[_part("1", 700, 200, rotation_allowed=False)],
 		sheets=[SheetInput(name="Лист", width_mm=1000, height_mm=800)],
 		settings=CutSettings(kerf_width_mm=4),
 	)
@@ -449,7 +454,7 @@ def test_exact_fit_sheet_result_has_no_actual_cuts():
 
 def test_sheet_result_contains_area_metrics():
 	result = optimize_guillotine_cutting(
-		parts=[_part("1", 700, 200)],
+		parts=[_part("1", 700, 200, rotation_allowed=False)],
 		sheets=[SheetInput(name="Лист", width_mm=1000, height_mm=800)],
 		settings=CutSettings(kerf_width_mm=4),
 	)
@@ -468,7 +473,10 @@ def test_sheet_result_contains_area_metrics():
 
 def test_cutting_result_contains_total_metrics_and_unplaced_count():
 	result = optimize_guillotine_cutting(
-		parts=[_part("1", 700, 200), _part("2", 2000, 2000)],
+		parts=[
+			_part("1", 700, 200, rotation_allowed=False),
+			_part("2", 2000, 2000),
+		],
 		sheets=[SheetInput(name="Лист", width_mm=1000, height_mm=800)],
 		settings=CutSettings(kerf_width_mm=4),
 	)
@@ -523,3 +531,34 @@ def test_sheet_metrics_use_usable_area_inside_margins():
 	assert metrics.material_utilization_percent == 1
 	assert metrics.working_area_efficiency_percent == 10000 / 940800 * 100
 	assert metrics.placed_area_mm2 + metrics.waste_area_mm2 + metrics.kerf_area_mm2 == metrics.usable_area_mm2
+
+
+def test_multi_pass_optimization_is_deterministic() -> None:
+	parts = [
+		_part("1", 700, 400, quantity=2),
+		_part("2", 500, 300, quantity=3),
+		_part("3", 200, 150, quantity=4),
+	]
+	sheets = [SheetInput(name="Лист", width_mm=1200, height_mm=1000, quantity=2)]
+	settings = CutSettings(kerf_width_mm=4)
+
+	first = optimize_guillotine_cutting(parts=parts, sheets=sheets, settings=settings)
+	second = optimize_guillotine_cutting(parts=parts, sheets=sheets, settings=settings)
+
+	assert first == second
+	assert first.optimization is not None
+	assert first.optimization.evaluated_variant_count == 24
+
+
+def test_basis_reference_multi_pass_places_all_parts_without_exceeding_14_sheets() -> None:
+	result = optimize_guillotine_cutting(
+		parts=build_basis_agt_3019_parts(),
+		sheets=build_basis_agt_3019_sheets(),
+		settings=build_basis_agt_3019_settings(),
+	)
+
+	assert result.metrics.placed_part_count == 93
+	assert result.metrics.unplaced_part_count == 0
+	assert result.metrics.sheet_count <= 14
+	assert result.optimization is not None
+	assert result.optimization.evaluated_variant_count == 24
