@@ -3,6 +3,7 @@ from cutting_app.app.domain.cut_tree import CutDirection
 from cutting_app.app.domain.edge import EdgeSet, EdgeSpec
 from cutting_app.app.domain.placement import Rotation
 from cutting_app.app.domain.part import PartInput
+from cutting_app.app.domain.return_remnant import ReturnRemnantSettings
 from cutting_app.app.domain.sheet import SheetInput, SheetMargins
 from cutting_app.app.services.guillotine_optimizer import optimize_guillotine_cutting
 from cutting_app.app.services.cutting_result_validator import validate_cutting_result
@@ -297,6 +298,36 @@ def test_exact_fit_leaf_is_part_not_waste():
 	assert root.part_number == "1"
 	assert root.is_waste is False
 	assert sheet.waste_areas == []
+	assert sheet.return_remnants == []
+	assert sheet.metrics.return_remnant_count == 0
+	assert result.return_remnants == []
+	assert result.metrics.material_utilization_with_return_remnants_percent == 100
+
+
+def test_custom_return_remnant_settings_are_applied_to_selected_layout() -> None:
+	result = optimize_guillotine_cutting(
+		parts=[_part("1", 400, 400, rotation_allowed=False)],
+		sheets=[SheetInput(name="Лист", width_mm=1000, height_mm=1000)],
+		settings=CutSettings(kerf_width_mm=4),
+		return_remnant_settings=ReturnRemnantSettings(
+			min_long_side_mm=800,
+			min_short_side_mm=80,
+			min_area_mm2=40_000,
+		),
+	)
+
+	sheet = result.sheets[0]
+
+	assert len(sheet.return_remnants) == 1
+	assert sheet.return_remnants[0].long_side_mm == 1000
+	assert sheet.return_remnants[0].short_side_mm == 596
+	assert sheet.metrics.return_remnant_count == 1
+	assert sheet.metrics.return_remnant_area_mm2 == 596_000
+	assert sheet.metrics.material_utilization_with_return_remnants_percent == 75.6
+	assert result.return_remnants == sheet.return_remnants
+	assert result.metrics.return_remnant_count == 1
+	assert result.metrics.return_remnant_area_mm2 == 596_000
+	assert result.metrics.material_utilization_with_return_remnants_percent == 75.6
 
 
 

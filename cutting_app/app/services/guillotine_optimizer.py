@@ -23,6 +23,7 @@ from cutting_app.app.domain.optimization import (
 )
 from cutting_app.app.domain.part import PartInput
 from cutting_app.app.domain.placement import Rotation
+from cutting_app.app.domain.return_remnant import ReturnRemnantSettings
 from cutting_app.app.domain.sheet import SheetInput, SheetMargins
 from cutting_app.app.services.area_metrics_calculator import (
 	calculate_material_utilization_percent,
@@ -42,6 +43,7 @@ from cutting_app.app.services.guillotine_optimization_variants import (
 )
 from cutting_app.app.services.placement_calculator import calculate_placed_dimensions
 from cutting_app.app.services.production_cut_plan_builder import build_production_cut_plan
+from cutting_app.app.services.return_remnant_calculator import attach_return_remnants
 from cutting_app.app.services.sheet_calculator import calculate_usable_sheet_area
 from cutting_app.app.services.size_calculator import calculate_part_sizes
 
@@ -96,6 +98,7 @@ def optimize_guillotine_cutting(
 	parts: list[PartInput],
 	sheets: list[SheetInput],
 	settings: CutSettings,
+	return_remnant_settings: ReturnRemnantSettings | None = None,
 ) -> CuttingResult:
 	variants = build_default_optimization_variants()
 	base_evaluated = [
@@ -129,7 +132,13 @@ def optimize_guillotine_cutting(
 		technical_order_start=len(capacity_evaluated),
 	)
 
-	return select_best_cutting_variant([*capacity_evaluated, *operation_evaluated])
+	selected_result = select_best_cutting_variant(
+		[*capacity_evaluated, *operation_evaluated]
+	)
+	return attach_return_remnants(
+		selected_result,
+		return_remnant_settings or ReturnRemnantSettings(),
+	)
 
 
 def _optimize_guillotine_cutting_variant(

@@ -4,6 +4,7 @@ from urllib.parse import parse_qs
 from cutting_app.app.domain.cut_settings import CutSettings
 from cutting_app.app.domain.cut_tree import CutDirection
 from cutting_app.app.domain.cutting_result import CuttingResult
+from cutting_app.app.domain.return_remnant import ReturnRemnantSettings
 from cutting_app.app.domain.result_issue import ResultIssue
 from cutting_app.app.domain.sheet import SheetInput, SheetMargins
 from cutting_app.app.exporters import svg_exporter
@@ -29,6 +30,9 @@ class ManualCuttingFormData:
 	margin_bottom_mm: str
 	parts_text: str
 	initial_cut_direction: str = CutDirection.VERTICAL.value
+	return_remnant_min_long_side_mm: str = "400"
+	return_remnant_min_short_side_mm: str = "80"
+	return_remnant_min_area_m2: str = "0.04"
 
 
 @dataclass(frozen=True)
@@ -47,6 +51,7 @@ class _ParsedManualForm:
 	kerf_width_mm: float
 	initial_cut_direction: CutDirection
 	margins: SheetMargins
+	return_remnant_settings: ReturnRemnantSettings | None
 	errors: list[str]
 
 
@@ -62,6 +67,9 @@ def make_default_manual_cutting_form() -> ManualCuttingFormData:
 		margin_bottom_mm="10",
 		parts_text=DEFAULT_PARTS_TEXT,
 		initial_cut_direction=CutDirection.VERTICAL.value,
+		return_remnant_min_long_side_mm="400",
+		return_remnant_min_short_side_mm="80",
+		return_remnant_min_area_m2="0.04",
 	)
 
 
@@ -82,6 +90,21 @@ def manual_cutting_form_from_urlencoded_body(body: bytes) -> ManualCuttingFormDa
 			values,
 			"initial_cut_direction",
 			default_form.initial_cut_direction,
+		),
+		return_remnant_min_long_side_mm=_first(
+			values,
+			"return_remnant_min_long_side_mm",
+			default_form.return_remnant_min_long_side_mm,
+		),
+		return_remnant_min_short_side_mm=_first(
+			values,
+			"return_remnant_min_short_side_mm",
+			default_form.return_remnant_min_short_side_mm,
+		),
+		return_remnant_min_area_m2=_first(
+			values,
+			"return_remnant_min_area_m2",
+			default_form.return_remnant_min_area_m2,
 		),
 	)
 
@@ -107,6 +130,9 @@ def build_manual_cutting_preview(form: ManualCuttingFormData) -> ManualCuttingPr
 			input_errors=input_errors,
 		)
 
+	if parsed_form.return_remnant_settings is None:
+		raise ValueError("Не удалось разобрать настройки возвратных остатков.")
+
 	sheet = SheetInput(
 		name="Лист",
 		width_mm=parsed_form.sheet_width_mm,
@@ -122,6 +148,7 @@ def build_manual_cutting_preview(form: ManualCuttingFormData) -> ManualCuttingPr
 		parts=parts_result.parts,
 		sheets=[sheet],
 		settings=settings,
+		return_remnant_settings=parsed_form.return_remnant_settings,
 	)
 	issues = validate_cutting_result(result)
 	svg = svg_exporter.export_cutting_result_to_svg(result, issues=issues)
@@ -149,6 +176,33 @@ def _parse_manual_form(form: ManualCuttingFormData) -> _ParsedManualForm:
 	margin_top_mm = _parse_float(form.margin_top_mm, "Отступ сверху", errors, min_value=0, include_min=True)
 	margin_right_mm = _parse_float(form.margin_right_mm, "Отступ справа", errors, min_value=0, include_min=True)
 	margin_bottom_mm = _parse_float(form.margin_bottom_mm, "Отступ снизу", errors, min_value=0, include_min=True)
+	return_remnant_min_long_side_mm = _parse_float(
+		form.return_remnant_min_long_side_mm,
+		"Минимальная длинная сторона возвратного остатка",
+		errors,
+		min_value=0,
+		include_min=True,
+	)
+	return_remnant_min_short_side_mm = _parse_float(
+		form.return_remnant_min_short_side_mm,
+		"Минимальная короткая сторона возвратного остатка",
+		errors,
+		min_value=0,
+		include_min=True,
+	)
+	return_remnant_min_area_m2 = _parse_float(
+		form.return_remnant_min_area_m2,
+		"Минимальная площадь возвратного остатка",
+		errors,
+		min_value=0,
+		include_min=True,
+	)
+	return_remnant_settings = _build_return_remnant_settings(
+		min_long_side_mm=return_remnant_min_long_side_mm,
+		min_short_side_mm=return_remnant_min_short_side_mm,
+		min_area_m2=return_remnant_min_area_m2,
+		errors=errors,
+	)
 
 	return _ParsedManualForm(
 		sheet_width_mm=sheet_width_mm,
@@ -162,7 +216,28 @@ def _parse_manual_form(form: ManualCuttingFormData) -> _ParsedManualForm:
 			right_mm=margin_right_mm,
 			bottom_mm=margin_bottom_mm,
 		),
+		return_remnant_settings=return_remnant_settings,
 		errors=errors,
+	)
+
+
+def _build_return_remnant_settings(
+	*,
+	min_long_side_mm: float,
+	min_short_side_mm: float,
+	min_area_m2: float,
+	errors: list[str],
+) -> ReturnRemnantSettings | None:
+	if min_long_side_mm < min_short_side_mm:
+		errors.append(
+			"Возвратный остаток: минимальная длинная сторона не может быть меньше короткой."
+		)
+		return None
+
+	return ReturnRemnantSettings(
+		min_long_side_mm=min_long_side_mm,
+		min_short_side_mm=min_short_side_mm,
+		min_area_mm2=min_area_m2 * 1_000_000,
 	)
 
 

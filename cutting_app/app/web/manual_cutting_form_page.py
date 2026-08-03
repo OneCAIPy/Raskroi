@@ -73,6 +73,20 @@ def _render_form(form: ManualCuttingFormData) -> str:
 	</fieldset>
 
 	<fieldset>
+		<legend>Возвратные остатки</legend>
+		<label>Минимальная длинная сторона, мм
+			<input name="return_remnant_min_long_side_mm" value="{escape(form.return_remnant_min_long_side_mm)}" inputmode="decimal">
+		</label>
+		<label>Минимальная короткая сторона, мм
+			<input name="return_remnant_min_short_side_mm" value="{escape(form.return_remnant_min_short_side_mm)}" inputmode="decimal">
+		</label>
+		<label>Минимальная площадь, м²
+			<input name="return_remnant_min_area_m2" value="{escape(form.return_remnant_min_area_m2)}" inputmode="decimal">
+		</label>
+		<p class="hint">По умолчанию используются пороги эталона БАЗИСа: 400 × 80 мм и 0,04 м². Учитываются только физически отделяемые прямоугольные листья дерева резов.</p>
+	</fieldset>
+
+	<fieldset>
 		<legend>Детали</legend>
 		<p class="hint">Старый формат: номер; название; L; W; количество</p>
 		<p class="hint">Расширенный формат: номер; название; L; W; количество; L1; L2; W1; W2</p>
@@ -131,12 +145,16 @@ def _render_metrics(preview: ManualCuttingPreview) -> str:
 	<li>Деталей размещено: {metrics.placed_part_count}</li>
 	<li>Деталей не размещено: {metrics.unplaced_part_count}</li>
 	<li>КИМ по площади материала: {metrics.material_utilization_percent:.2f}%</li>
+	<li>Возвратных остатков: {metrics.return_remnant_count}</li>
+	<li>Площадь возвратных остатков: {metrics.return_remnant_area_mm2 / 1_000_000:.3f} м²</li>
+	<li>КИМ с учётом возвратных остатков: {metrics.material_utilization_with_return_remnants_percent:.2f}%</li>
 	<li>Заполнение рабочей области: {metrics.working_area_efficiency_percent:.2f}%</li>
 	<li>Длина кромки: {edge_consumption.base_length_mm / 1000:.3f} м</li>
 	<li>Длина кромки со свесом: {edge_consumption.total_length_mm / 1000:.3f} м</li>
 	<li>Отрезов кромки: {edge_consumption.segment_count}</li>
 	{production_items}
 </ul>
+{_render_return_remnants(preview)}
 {_render_edge_material_consumption(preview)}"""
 
 
@@ -179,6 +197,40 @@ def _render_edge_material_consumption(preview: ManualCuttingPreview) -> str:
 			<th>Базовая длина, м</th>
 			<th>Свес, м</th>
 			<th>Всего, м</th>
+		</tr>
+	</thead>
+	<tbody>{rows}</tbody>
+</table>"""
+
+
+def _render_return_remnants(preview: ManualCuttingPreview) -> str:
+	if preview.result is None:
+		return ""
+
+	if not preview.result.return_remnants:
+		return """
+<h3>Возвратные остатки</h3>
+<p>Остатков, проходящих заданные пороги, нет.</p>"""
+
+	rows = "".join(
+		f"""
+	<tr>
+		<td>{index}</td>
+		<td>{escape(remnant.sheet_name)}</td>
+		<td>{remnant.long_side_mm:g} × {remnant.short_side_mm:g}</td>
+		<td>{remnant.area_mm2 / 1_000_000:.3f}</td>
+	</tr>"""
+		for index, remnant in enumerate(preview.result.return_remnants, start=1)
+	)
+	return f"""
+<h3>Возвратные остатки</h3>
+<table>
+	<thead>
+		<tr>
+			<th>№</th>
+			<th>Лист</th>
+			<th>Размер (длинная × короткая), мм</th>
+			<th>Площадь, м²</th>
 		</tr>
 	</thead>
 	<tbody>{rows}</tbody>

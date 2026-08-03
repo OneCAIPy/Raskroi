@@ -9,6 +9,18 @@ def calculate_material_utilization_percent(
 	)
 
 
+def calculate_material_utilization_with_return_remnants_percent(
+	*,
+	placed_area_mm2: float,
+	return_remnant_area_mm2: float,
+	used_material_area_mm2: float,
+) -> float:
+	return _calculate_area_ratio_percent(
+		placed_area_mm2=placed_area_mm2 + return_remnant_area_mm2,
+		reference_area_mm2=used_material_area_mm2,
+	)
+
+
 def calculate_working_area_efficiency_percent(
 	*,
 	placed_area_mm2: float,

@@ -6,6 +6,7 @@ from cutting_app.app.domain.edge_consumption import EdgeConsumption
 from cutting_app.app.domain.optimization import OptimizationSummary
 from cutting_app.app.domain.placement import Rotation
 from cutting_app.app.domain.production_cut_plan import ProductionCutPlan
+from cutting_app.app.domain.return_remnant import ReturnRemnant
 
 
 @dataclass(frozen=True)
@@ -50,6 +51,9 @@ class SheetCutMetrics:
 	kerf_area_mm2: float = 0
 	material_utilization_percent: float = 0
 	working_area_efficiency_percent: float = 0
+	return_remnant_count: int = 0
+	return_remnant_area_mm2: float = 0
+	material_utilization_with_return_remnants_percent: float = 0
 
 
 @dataclass(frozen=True)
@@ -64,6 +68,9 @@ class CuttingMetrics:
 	kerf_area_mm2: float = 0
 	material_utilization_percent: float = 0
 	working_area_efficiency_percent: float = 0
+	return_remnant_count: int = 0
+	return_remnant_area_mm2: float = 0
+	material_utilization_with_return_remnants_percent: float = 0
 
 
 @dataclass(frozen=True)
@@ -80,6 +87,7 @@ class SheetCutResult:
 	metrics: SheetCutMetrics = field(default_factory=SheetCutMetrics)
 	production_cut_plan: ProductionCutPlan | None = None
 	edge_consumption: EdgeConsumption = field(default_factory=EdgeConsumption)
+	return_remnants: list[ReturnRemnant] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
@@ -89,3 +97,4 @@ class CuttingResult:
 	metrics: CuttingMetrics = field(default_factory=CuttingMetrics)
 	edge_consumption: EdgeConsumption = field(default_factory=EdgeConsumption)
 	optimization: OptimizationSummary | None = None
+	return_remnants: list[ReturnRemnant] = field(default_factory=list)

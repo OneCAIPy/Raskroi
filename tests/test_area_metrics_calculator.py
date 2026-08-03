@@ -2,6 +2,7 @@ import pytest
 
 from cutting_app.app.services.area_metrics_calculator import (
 	calculate_material_utilization_percent,
+	calculate_material_utilization_with_return_remnants_percent,
 	calculate_working_area_efficiency_percent,
 )
 
@@ -30,6 +31,17 @@ def test_working_area_efficiency_uses_area_after_sheet_trims() -> None:
 
 	assert result == pytest.approx(90.71994584837545)
 	assert round(result, 2) == 90.72
+
+
+def test_material_utilization_with_return_remnants_matches_basis_reference() -> None:
+	result = calculate_material_utilization_with_return_remnants_percent(
+		placed_area_mm2=39_201_903,
+		return_remnant_area_mm2=2_555_169.2,
+		used_material_area_mm2=13 * 2800 * 1220,
+	)
+
+	assert result == pytest.approx(94.03051747432896)
+	assert round(result, 2) == 94.03
 
 
 @pytest.mark.parametrize(
