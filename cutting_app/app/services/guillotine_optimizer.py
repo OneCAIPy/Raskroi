@@ -18,6 +18,7 @@ from cutting_app.app.domain.optimization import (
 	PartOrdering,
 	PlacementHeuristic,
 	RotationPreference,
+	SheetSelectionHeuristic,
 	SplitHeuristic,
 )
 from cutting_app.app.domain.part import PartInput
@@ -37,6 +38,7 @@ from cutting_app.app.services.cutting_variant_selector import (
 )
 from cutting_app.app.services.guillotine_optimization_variants import (
 	build_default_optimization_variants,
+	build_operation_refinement_variants,
 )
 from cutting_app.app.services.placement_calculator import calculate_placed_dimensions
 from cutting_app.app.services.production_cut_plan_builder import build_production_cut_plan
@@ -50,6 +52,7 @@ class SplitStrategy(str, Enum):
 
 
 _MAX_LOCAL_REBUILD_SUFFIX_SHEETS = 7
+_MAX_OPERATION_REBUILD_WINDOW_SHEETS = 7
 
 
 @dataclass(frozen=True)
@@ -116,8 +119,17 @@ def optimize_guillotine_cutting(
 		seed_result=base_result,
 		technical_order_start=len(base_evaluated),
 	)
+	capacity_evaluated = [*base_evaluated, *local_evaluated]
+	capacity_result = select_best_cutting_variant(capacity_evaluated)
+	operation_evaluated = _build_operation_refinement_candidates(
+		parts=parts,
+		settings=settings,
+		variants=build_operation_refinement_variants(),
+		seed_result=capacity_result,
+		technical_order_start=len(capacity_evaluated),
+	)
 
-	return select_best_cutting_variant([*base_evaluated, *local_evaluated])
+	return select_best_cutting_variant([*capacity_evaluated, *operation_evaluated])
 
 
 def _optimize_guillotine_cutting_variant(
@@ -144,26 +156,30 @@ def _optimize_part_units_variant(
 	unplaced_parts: list[UnplacedPart] = []
 
 	for part_unit in part_units:
-		placed = False
-
-		for working_sheet in working_sheets:
-			candidate = _find_best_candidate(
-				working_sheet,
-				part_unit.part,
-				settings,
-				variant,
+		if variant.sheet_selection_heuristic == SheetSelectionHeuristic.FIRST_FIT:
+			selected = _find_first_fit_sheet_candidate(
+				working_sheets=working_sheets,
+				part=part_unit.part,
+				settings=settings,
+				variant=variant,
 			)
-			if candidate is None:
-				continue
+		else:
+			selected = _find_best_sheet_candidate(
+				working_sheets=working_sheets,
+				part=part_unit.part,
+				settings=settings,
+				variant=variant,
+			)
+		placed = selected is not None
 
+		if selected is not None:
+			working_sheet, candidate = selected
 			_place_candidate(
 				working_sheet=working_sheet,
 				part_unit=part_unit,
 				candidate=candidate,
 				settings=settings,
 			)
-			placed = True
-			break
 
 		if not placed:
 			unplaced_parts.append(
@@ -192,6 +208,83 @@ def _optimize_part_units_variant(
 			for segment in sheet.edge_consumption.segments
 		),
 	)
+
+
+def _find_first_fit_sheet_candidate(
+	working_sheets: list[_WorkingSheet],
+	part: PartInput,
+	settings: CutSettings,
+	variant: OptimizationVariant,
+) -> tuple[_WorkingSheet, _PlacementCandidate] | None:
+	for working_sheet in working_sheets:
+		candidate = _find_best_candidate(
+			working_sheet,
+			part,
+			settings,
+			variant,
+		)
+		if candidate is not None:
+			return working_sheet, candidate
+	return None
+
+
+def _find_best_sheet_candidate(
+	working_sheets: list[_WorkingSheet],
+	part: PartInput,
+	settings: CutSettings,
+	variant: OptimizationVariant,
+) -> tuple[_WorkingSheet, _PlacementCandidate] | None:
+	fit_candidates: list[tuple[int, _WorkingSheet, _PlacementCandidate]] = []
+
+	for sheet_index, working_sheet in enumerate(working_sheets):
+		candidate = _find_best_candidate(
+			working_sheet,
+			part,
+			settings,
+			variant,
+		)
+		if candidate is None:
+			continue
+		fit_candidates.append((sheet_index, working_sheet, candidate))
+
+	if not fit_candidates:
+		return None
+
+	best_stock_key = min(
+		_sheet_priority_key(working_sheet.sheet)
+		for _, working_sheet, _ in fit_candidates
+	)
+	priority_candidates = [
+		item
+		for item in fit_candidates
+		if _sheet_priority_key(item[1].sheet) == best_stock_key
+	]
+	used_candidates = [
+		item
+		for item in priority_candidates
+		if item[1].placed_parts
+	]
+
+	if used_candidates:
+		_, working_sheet, candidate = min(
+			used_candidates,
+			key=lambda item: (
+				*_score_placement_candidate(
+					item[2],
+					settings.kerf_width_mm,
+					variant.placement_heuristic,
+					variant.rotation_preference,
+				),
+				item[0],
+			),
+		)
+		return working_sheet, candidate
+
+	_, working_sheet, candidate = min(
+		priority_candidates,
+		key=lambda item: item[0],
+	)
+	return working_sheet, candidate
 
 
 def _build_local_rebuild_candidates(
@@ -250,6 +343,66 @@ def _build_local_rebuild_candidates(
 	return candidates
 
 
+def _build_operation_refinement_candidates(
+	parts: list[PartInput],
+	settings: CutSettings,
+	variants: tuple[OptimizationVariant, ...],
+	seed_result: CuttingResult,
+	technical_order_start: int,
+) -> list[EvaluatedCuttingVariant]:
+	if seed_result.unplaced_parts or len(seed_result.sheets) < 2:
+		return []
+
+	part_units_by_number = _build_unique_part_unit_lookup(parts)
+	if part_units_by_number is None:
+		return []
+	max_window_size = min(
+		_MAX_OPERATION_REBUILD_WINDOW_SHEETS,
+		len(seed_result.sheets),
+	)
+	seed_variant_id = _selected_variant_id(seed_result)
+	candidates: list[EvaluatedCuttingVariant] = []
+
+	for window_size in range(2, max_window_size + 1):
+		for window_start in range(len(seed_result.sheets) - window_size + 1):
+			window_sheets = seed_result.sheets[
+				window_start:window_start + window_size
+			]
+			part_units = [
+				part_units_by_number[placed_part.part_number]
+				for sheet in window_sheets
+				for placed_part in sheet.placed_parts
+			]
+
+			for variant in variants:
+				rebuilt_window = _optimize_part_units_variant(
+					part_units=part_units,
+					working_sheets=_create_rebuild_working_sheets(window_sheets),
+					settings=settings,
+					variant=variant,
+				)
+				candidate_result = _combine_rebuilt_window(
+					seed_result=seed_result,
+					window_start=window_start,
+					window_size=window_size,
+					rebuilt_window=rebuilt_window,
+				)
+				candidates.append(
+					EvaluatedCuttingVariant(
+						variant_id=_make_operation_refinement_variant_id(
+							window_start=window_start,
+							window_size=window_size,
+							seed_variant_id=seed_variant_id,
+							rebuild_variant_id=variant.variant_id,
+						),
+						technical_order=technical_order_start + len(candidates),
+						result=candidate_result,
+					)
+				)
+
+	return candidates
+
+
 def _build_unique_part_unit_lookup(
 	parts: list[PartInput],
 ) -> dict[str, _PartUnit] | None:
@@ -282,9 +435,10 @@ def _create_rebuild_working_sheets(
 def _sheet_input_from_result(sheet_result: SheetCutResult) -> SheetInput:
 	usable_area = sheet_result.root.area
 	return SheetInput(
-		name=sheet_result.sheet_name,
+		name=sheet_result.sheet_stock_name or sheet_result.sheet_name,
 		width_mm=sheet_result.sheet_width_mm,
 		height_mm=sheet_result.sheet_height_mm,
+		is_remnant=sheet_result.sheet_is_remnant,
 		margins=SheetMargins(
 			left_mm=usable_area.x_mm,
 			top_mm=usable_area.y_mm,
@@ -299,11 +453,26 @@ def _combine_rebuilt_suffix(
 	suffix_size: int,
 	rebuilt_suffix: CuttingResult,
 ) -> CuttingResult:
+	return _combine_rebuilt_window(
+		seed_result=seed_result,
+		window_start=len(seed_result.sheets) - suffix_size,
+		window_size=suffix_size,
+		rebuilt_window=rebuilt_suffix,
+	)
+
+
+def _combine_rebuilt_window(
+	seed_result: CuttingResult,
+	window_start: int,
+	window_size: int,
+	rebuilt_window: CuttingResult,
+) -> CuttingResult:
 	sheets = [
-		*seed_result.sheets[:-suffix_size],
-		*rebuilt_suffix.sheets,
+		*seed_result.sheets[:window_start],
+		*rebuilt_window.sheets,
+		*seed_result.sheets[window_start + window_size:],
 	]
-	unplaced_parts = rebuilt_suffix.unplaced_parts
+	unplaced_parts = rebuilt_window.unplaced_parts
 
 	return CuttingResult(
 		sheets=sheets,
@@ -324,6 +493,21 @@ def _make_local_rebuild_variant_id(
 ) -> str:
 	return (
 		f"local_suffix_{suffix_size}_to_{suffix_size - 1}"
+		f"__seed_{seed_variant_id}"
+		f"__rebuild_{rebuild_variant_id}"
+	)
+
+
+def _make_operation_refinement_variant_id(
+	window_start: int,
+	window_size: int,
+	seed_variant_id: str,
+	rebuild_variant_id: str,
+) -> str:
+	window_number = window_start + 1
+	window_end = window_start + window_size
+	return (
+		f"operation_window_{window_number}_to_{window_end}"
 		f"__seed_{seed_variant_id}"
 		f"__rebuild_{rebuild_variant_id}"
 	)
@@ -364,13 +548,18 @@ def _create_working_sheet(sheet: SheetInput, name: str) -> _WorkingSheet:
 
 
 def _sort_sheets(sheets: list[SheetInput]) -> list[SheetInput]:
-	return sorted(
-		sheets,
-		key=lambda sheet: (
-			0 if sheet.is_remnant else 1,
-			sheet.width_mm * sheet.height_mm,
-			sheet.name,
-		),
+	return sorted(sheets, key=_sheet_sort_key)
+
+
+def _sheet_sort_key(sheet: SheetInput) -> tuple[int, float, str]:
+	return _sheet_priority_key(sheet)
+
+
+def _sheet_priority_key(sheet: SheetInput) -> tuple[int, float, str]:
+	return (
+		0 if sheet.is_remnant else 1,
+		sheet.width_mm * sheet.height_mm,
+		sheet.name,
 	)
 
 
@@ -917,6 +1106,8 @@ def _to_sheet_cut_result(
 		sheet_width_mm=working_sheet.sheet.width_mm,
 		sheet_height_mm=working_sheet.sheet.height_mm,
 		root=working_sheet.root,
+		sheet_stock_name=working_sheet.sheet.name,
+		sheet_is_remnant=working_sheet.sheet.is_remnant,
 		placed_parts=working_sheet.placed_parts,
 		waste_areas=waste_areas,
 		actual_cuts=actual_cuts,

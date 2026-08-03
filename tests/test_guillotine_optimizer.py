@@ -31,6 +31,27 @@ def _part(
 	)
 
 
+def _operation_refinement_parts() -> list[PartInput]:
+	return [
+		_part(str(index), l_mm, w_mm)
+		for index, (l_mm, w_mm) in enumerate(
+			(
+				(70, 66),
+				(48, 48),
+				(70, 66),
+				(54, 66),
+				(26, 70),
+				(34, 38),
+				(42, 34),
+				(70, 66),
+				(48, 48),
+				(26, 70),
+			),
+			start=1,
+		)
+	]
+
+
 def test_two_neighbor_parts_use_one_actual_kerf_between_them():
 	result = optimize_guillotine_cutting(
 		parts=[_part("1", 400, 400, quantity=2)],
@@ -63,6 +84,8 @@ def test_remnant_sheet_is_used_before_standard_sheet():
 	)
 
 	assert result.sheets[0].sheet_name == "Остаток"
+	assert result.sheets[0].sheet_stock_name == "Остаток"
+	assert result.sheets[0].sheet_is_remnant is True
 	assert result.sheets[0].placed_parts[0].sheet_name == "Остаток"
 
 
@@ -547,7 +570,7 @@ def test_multi_pass_optimization_is_deterministic() -> None:
 
 	assert first == second
 	assert first.optimization is not None
-	assert first.optimization.evaluated_variant_count == 24
+	assert first.optimization.evaluated_variant_count == 48
 
 
 def test_local_suffix_rebuild_reduces_sheet_count() -> None:
@@ -580,13 +603,82 @@ def test_local_suffix_rebuild_reduces_sheet_count() -> None:
 	assert result.metrics.unplaced_part_count == 0
 	assert result.metrics.sheet_count == 4
 	assert result.optimization is not None
-	assert result.optimization.evaluated_variant_count == 96
+	assert result.optimization.evaluated_variant_count == 240
 	assert result.optimization.selected_variant_id.startswith(
 		"local_suffix_3_to_2__"
 	)
 
 
-def test_basis_reference_local_rebuild_reaches_13_sheets() -> None:
+def test_operation_window_refinement_reduces_production_metrics() -> None:
+	result = optimize_guillotine_cutting(
+		parts=_operation_refinement_parts(),
+		sheets=[SheetInput(name="Лист", width_mm=100, height_mm=100, quantity=6)],
+		settings=CutSettings(kerf_width_mm=2),
+	)
+	production_metrics = [
+		sheet.production_cut_plan.metrics
+		for sheet in result.sheets
+		if sheet.production_cut_plan is not None
+	]
+
+	assert result.metrics.placed_part_count == 10
+	assert result.metrics.unplaced_part_count == 0
+	assert result.metrics.sheet_count == 5
+	assert result.optimization is not None
+	assert result.optimization.evaluated_variant_count == 336
+	assert result.optimization.selected_variant_id.startswith(
+		"operation_window_1_to_2__"
+	)
+	assert sum(metrics.cut_length_mm for metrics in production_metrics) == 1152
+	assert sum(metrics.pass_count for metrics in production_metrics) == 17
+	assert sum(metrics.strip_turn_count for metrics in production_metrics) == 8
+	assert sum(metrics.size_setting_count for metrics in production_metrics) == 14
+	assert validate_cutting_result(result) == []
+
+
+def test_operation_refinement_preserves_stock_priority_and_identity() -> None:
+	result = optimize_guillotine_cutting(
+		parts=_operation_refinement_parts(),
+		sheets=[
+			SheetInput(
+				name="Остаток",
+				width_mm=100,
+				height_mm=100,
+				is_remnant=True,
+			),
+			SheetInput(
+				name="Стандарт",
+				width_mm=100,
+				height_mm=100,
+				quantity=5,
+			),
+		],
+		settings=CutSettings(kerf_width_mm=2),
+	)
+
+	assert result.optimization is not None
+	assert result.optimization.selected_variant_id.startswith(
+		"operation_window_2_to_3__"
+	)
+	assert result.metrics.sheet_count == 5
+	assert [sheet.sheet_stock_name for sheet in result.sheets] == [
+		"Остаток",
+		"Стандарт",
+		"Стандарт",
+		"Стандарт",
+		"Стандарт",
+	]
+	assert [sheet.sheet_is_remnant for sheet in result.sheets] == [
+		True,
+		False,
+		False,
+		False,
+		False,
+	]
+	assert validate_cutting_result(result) == []
+
+
+def test_basis_reference_operation_refinement_keeps_13_sheets() -> None:
 	result = optimize_guillotine_cutting(
 		parts=build_basis_agt_3019_parts(),
 		sheets=build_basis_agt_3019_sheets(),
@@ -599,9 +691,9 @@ def test_basis_reference_local_rebuild_reaches_13_sheets() -> None:
 	assert round(result.metrics.material_utilization_percent, 2) == 88.28
 	assert round(result.metrics.working_area_efficiency_percent, 2) == 90.72
 	assert result.optimization is not None
-	assert result.optimization.evaluated_variant_count == 168
+	assert result.optimization.evaluated_variant_count == 1536
 	assert result.optimization.selected_variant_id.startswith(
-		"local_suffix_7_to_6__"
+		"operation_window_1_to_6__"
 	)
 	placed_part_numbers = [
 		part.part_number
@@ -618,8 +710,8 @@ def test_basis_reference_local_rebuild_reaches_13_sheets() -> None:
 		if sheet.production_cut_plan is not None
 	]
 
-	assert sum(metrics.cut_length_mm for metrics in production_metrics) == 214108
-	assert sum(metrics.pass_count for metrics in production_metrics) == 236
-	assert sum(metrics.strip_turn_count for metrics in production_metrics) == 97
-	assert sum(metrics.size_setting_count for metrics in production_metrics) == 157
+	assert sum(metrics.cut_length_mm for metrics in production_metrics) == 212841.4
+	assert sum(metrics.pass_count for metrics in production_metrics) == 233
+	assert sum(metrics.strip_turn_count for metrics in production_metrics) == 94
+	assert sum(metrics.size_setting_count for metrics in production_metrics) == 154
 	assert validate_cutting_result(result) == []

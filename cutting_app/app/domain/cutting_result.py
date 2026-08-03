@@ -72,6 +72,8 @@ class SheetCutResult:
 	sheet_width_mm: float
 	sheet_height_mm: float
 	root: CutNode
+	sheet_stock_name: str = ""
+	sheet_is_remnant: bool = False
 	placed_parts: list[PlacedPart] = field(default_factory=list)
 	waste_areas: list[RectArea] = field(default_factory=list)
 	actual_cuts: list[ActualCut] = field(default_factory=list)

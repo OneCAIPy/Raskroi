@@ -13,6 +13,11 @@ class PlacementHeuristic(str, Enum):
 	BEST_SHORT_SIDE_FIT = "best_short_side_fit"
 
 
+class SheetSelectionHeuristic(str, Enum):
+	FIRST_FIT = "first_fit"
+	BEST_USED_SHEET_FIT = "best_used_sheet_fit"
+
+
 class SplitHeuristic(str, Enum):
 	MIN_KERF_LOSS = "min_kerf_loss"
 	SHORTER_LEFTOVER_AXIS = "shorter_leftover_axis"
@@ -31,6 +36,7 @@ class OptimizationVariant:
 	placement_heuristic: PlacementHeuristic
 	split_heuristic: SplitHeuristic
 	rotation_preference: RotationPreference
+	sheet_selection_heuristic: SheetSelectionHeuristic = SheetSelectionHeuristic.FIRST_FIT
 
 
 @dataclass(frozen=True)
