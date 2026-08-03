@@ -15,6 +15,10 @@ def test_manual_form_page_is_available() -> None:
 	assert 'name="return_remnant_min_long_side_mm"' in response.text
 	assert 'name="return_remnant_min_short_side_mm"' in response.text
 	assert 'name="return_remnant_min_area_m2"' in response.text
+	assert 'name="return_remnant_profile"' in response.text
+	assert 'value="max_useful_area" selected' in response.text
+	assert 'value="long"' in response.text
+	assert 'value="compact"' in response.text
 	assert "Минимальная длинная сторона" in response.text
 	assert "textarea" in response.text
 	assert "номер; название; L; W; количество; L1; L2; W1; W2" in response.text
@@ -33,6 +37,7 @@ def test_manual_form_post_returns_svg_result() -> None:
 			"sheet_quantity": "1",
 			"kerf_width_mm": "4",
 			"initial_cut_direction": "horizontal",
+			"return_remnant_profile": "long",
 			"margin_left_mm": "0",
 			"margin_top_mm": "0",
 			"margin_right_mm": "0",
@@ -57,6 +62,8 @@ def test_manual_form_post_returns_svg_result() -> None:
 	assert "КИМ с учётом возвратных остатков:" in response.text
 	assert "Размер (длинная × короткая), мм" in response.text
 	assert 'value="horizontal" selected' in response.text
+	assert 'value="long" selected' in response.text
+	assert "Профиль возвратного остатка: длинный остаток" in response.text
 	assert "Эффективность:" not in response.text
 	assert "<svg" in response.text
 	assert "placed-part" in response.text

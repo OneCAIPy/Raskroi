@@ -1,5 +1,6 @@
 from html import escape
 
+from cutting_app.app.domain.return_remnant import ReturnRemnantProfile
 from cutting_app.app.web.manual_cutting_form import ManualCuttingFormData, ManualCuttingPreview
 
 
@@ -74,6 +75,13 @@ def _render_form(form: ManualCuttingFormData) -> str:
 
 	<fieldset>
 		<legend>Возвратные остатки</legend>
+		<label>Желаемый профиль остатка
+			<select name="return_remnant_profile">
+				<option value="max_useful_area"{_selected(form.return_remnant_profile, "max_useful_area")}>Максимальная полезная площадь</option>
+				<option value="long"{_selected(form.return_remnant_profile, "long")}>Длинный остаток</option>
+				<option value="compact"{_selected(form.return_remnant_profile, "compact")}>Компактный остаток</option>
+			</select>
+		</label>
 		<label>Минимальная длинная сторона, мм
 			<input name="return_remnant_min_long_side_mm" value="{escape(form.return_remnant_min_long_side_mm)}" inputmode="decimal">
 		</label>
@@ -83,6 +91,7 @@ def _render_form(form: ManualCuttingFormData) -> str:
 		<label>Минимальная площадь, м²
 			<input name="return_remnant_min_area_m2" value="{escape(form.return_remnant_min_area_m2)}" inputmode="decimal">
 		</label>
+		<p class="hint">Площадь сохраняет максимум полезного материала; длинный профиль ищет остаток с наибольшей длинной стороной; компактный — остаток с наибольшим вписываемым квадратом.</p>
 		<p class="hint">По умолчанию используются пороги эталона БАЗИСа: 400 × 80 мм и 0,04 м². Учитываются только физически отделяемые прямоугольные листья дерева резов.</p>
 	</fieldset>
 
@@ -139,6 +148,7 @@ def _render_metrics(preview: ManualCuttingPreview) -> str:
 	metrics = preview.result.metrics
 	edge_consumption = preview.result.edge_consumption
 	production_items = _render_production_metric_items(preview)
+	return_remnant_profile_item = _render_return_remnant_profile_item(preview)
 	return f"""
 <ul>
 	<li>Листов использовано: {metrics.sheet_count}</li>
@@ -148,6 +158,7 @@ def _render_metrics(preview: ManualCuttingPreview) -> str:
 	<li>Возвратных остатков: {metrics.return_remnant_count}</li>
 	<li>Площадь возвратных остатков: {metrics.return_remnant_area_mm2 / 1_000_000:.3f} м²</li>
 	<li>КИМ с учётом возвратных остатков: {metrics.material_utilization_with_return_remnants_percent:.2f}%</li>
+	{return_remnant_profile_item}
 	<li>Заполнение рабочей области: {metrics.working_area_efficiency_percent:.2f}%</li>
 	<li>Длина кромки: {edge_consumption.base_length_mm / 1000:.3f} м</li>
 	<li>Длина кромки со свесом: {edge_consumption.total_length_mm / 1000:.3f} м</li>
@@ -156,6 +167,19 @@ def _render_metrics(preview: ManualCuttingPreview) -> str:
 </ul>
 {_render_return_remnants(preview)}
 {_render_edge_material_consumption(preview)}"""
+
+
+def _render_return_remnant_profile_item(preview: ManualCuttingPreview) -> str:
+	if preview.result is None or preview.result.optimization is None:
+		return ""
+
+	profile = preview.result.optimization.score.return_remnant_profile
+	labels = {
+		ReturnRemnantProfile.MAX_USEFUL_AREA: "максимальная полезная площадь",
+		ReturnRemnantProfile.LONG: "длинный остаток",
+		ReturnRemnantProfile.COMPACT: "компактный остаток",
+	}
+	return f"<li>Профиль возвратного остатка: {labels[profile]}</li>"
 
 
 def _render_production_metric_items(preview: ManualCuttingPreview) -> str:

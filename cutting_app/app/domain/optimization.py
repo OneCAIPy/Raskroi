@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from enum import Enum
 
+from cutting_app.app.domain.return_remnant import ReturnRemnantProfile
+
 
 class PartOrdering(str, Enum):
 	AREA_DESC = "area_desc"
@@ -45,6 +47,15 @@ class OptimizationVariantScore:
 	placed_area_mm2: float
 	sheet_count: int
 	material_utilization_percent: float
+	new_sheet_count: int
+	new_material_area_mm2: float
+	return_remnant_profile: ReturnRemnantProfile
+	return_remnant_area_mm2: float
+	largest_return_remnant_area_mm2: float
+	longest_return_remnant_side_mm: float
+	longest_return_remnant_area_mm2: float
+	largest_compact_square_area_mm2: float
+	compact_return_remnant_area_mm2: float
 	cut_length_mm: float
 	pass_count: int
 	strip_turn_count: int
@@ -52,17 +63,38 @@ class OptimizationVariantScore:
 	technical_order: int
 
 	@property
-	def selection_key(self) -> tuple[int, float, int, float, float, int, int, int, int]:
+	def selection_key(self) -> tuple[float | int, ...]:
 		return (
 			self.unplaced_part_count,
 			-self.placed_area_mm2,
-			self.sheet_count,
-			-self.material_utilization_percent,
+			self.new_sheet_count,
+			self.new_material_area_mm2,
+			*self._return_remnant_selection_key(),
 			self.cut_length_mm,
 			self.pass_count,
 			self.strip_turn_count,
 			self.size_setting_count,
 			self.technical_order,
+		)
+
+	def _return_remnant_selection_key(self) -> tuple[float, ...]:
+		if self.return_remnant_profile == ReturnRemnantProfile.LONG:
+			return (
+				-self.longest_return_remnant_side_mm,
+				-self.longest_return_remnant_area_mm2,
+				-self.return_remnant_area_mm2,
+			)
+
+		if self.return_remnant_profile == ReturnRemnantProfile.COMPACT:
+			return (
+				-self.largest_compact_square_area_mm2,
+				-self.compact_return_remnant_area_mm2,
+				-self.return_remnant_area_mm2,
+			)
+
+		return (
+			-self.return_remnant_area_mm2,
+			-self.largest_return_remnant_area_mm2,
 		)
 
 

@@ -1,9 +1,14 @@
+import pytest
+
 from cutting_app.app.domain.cut_settings import CutSettings
 from cutting_app.app.domain.cut_tree import CutDirection
 from cutting_app.app.domain.edge import EdgeSet, EdgeSpec
 from cutting_app.app.domain.placement import Rotation
 from cutting_app.app.domain.part import PartInput
-from cutting_app.app.domain.return_remnant import ReturnRemnantSettings
+from cutting_app.app.domain.return_remnant import (
+	ReturnRemnantProfile,
+	ReturnRemnantSettings,
+)
 from cutting_app.app.domain.sheet import SheetInput, SheetMargins
 from cutting_app.app.services.guillotine_optimizer import optimize_guillotine_cutting
 from cutting_app.app.services.cutting_result_validator import validate_cutting_result
@@ -221,6 +226,7 @@ def test_horizontal_first_split_can_be_chosen_to_reduce_actual_kerf_loss():
 		parts=[_part("1", 700, 200, rotation_allowed=False)],
 		sheets=[SheetInput(name="Лист", width_mm=1000, height_mm=800)],
 		settings=CutSettings(kerf_width_mm=4),
+		return_remnant_settings=_no_qualifying_return_remnants(),
 	)
 
 	root = result.sheets[0].root
@@ -243,6 +249,7 @@ def test_candidate_selection_prefers_tighter_free_area_over_earlier_area():
 		parts=[_part("1", 400, 400), _part("2", 300, 500)],
 		sheets=[SheetInput(name="Лист", width_mm=1000, height_mm=1000)],
 		settings=CutSettings(kerf_width_mm=4),
+		return_remnant_settings=_no_qualifying_return_remnants(),
 	)
 
 	placed_by_number = {part.source_part_number: part for part in result.sheets[0].placed_parts}
@@ -394,6 +401,7 @@ def test_sheet_result_contains_actual_cut_segments_from_tree():
 		parts=[_part("1", 700, 200, rotation_allowed=False)],
 		sheets=[SheetInput(name="Лист", width_mm=1000, height_mm=800)],
 		settings=CutSettings(kerf_width_mm=4),
+		return_remnant_settings=_no_qualifying_return_remnants(),
 	)
 
 	actual_cuts = result.sheets[0].actual_cuts
@@ -422,6 +430,7 @@ def test_sheet_result_contains_production_plan_from_full_sheet():
 		parts=[_part("1", 700, 200, rotation_allowed=False)],
 		sheets=[SheetInput(name="Лист", width_mm=1000, height_mm=800)],
 		settings=CutSettings(kerf_width_mm=4),
+		return_remnant_settings=_no_qualifying_return_remnants(),
 	)
 
 	plan = result.sheets[0].production_cut_plan
@@ -511,6 +520,7 @@ def test_sheet_result_contains_area_metrics():
 		parts=[_part("1", 700, 200, rotation_allowed=False)],
 		sheets=[SheetInput(name="Лист", width_mm=1000, height_mm=800)],
 		settings=CutSettings(kerf_width_mm=4),
+		return_remnant_settings=_no_qualifying_return_remnants(),
 	)
 
 	metrics = result.sheets[0].metrics
@@ -533,6 +543,7 @@ def test_cutting_result_contains_total_metrics_and_unplaced_count():
 		],
 		sheets=[SheetInput(name="Лист", width_mm=1000, height_mm=800)],
 		settings=CutSettings(kerf_width_mm=4),
+		return_remnant_settings=_no_qualifying_return_remnants(),
 	)
 
 	metrics = result.metrics
@@ -709,7 +720,7 @@ def test_operation_refinement_preserves_stock_priority_and_identity() -> None:
 	assert validate_cutting_result(result) == []
 
 
-def test_basis_reference_operation_refinement_keeps_13_sheets() -> None:
+def test_basis_reference_max_area_profile_keeps_13_sheets() -> None:
 	result = optimize_guillotine_cutting(
 		parts=build_basis_agt_3019_parts(),
 		sheets=build_basis_agt_3019_sheets(),
@@ -724,7 +735,11 @@ def test_basis_reference_operation_refinement_keeps_13_sheets() -> None:
 	assert result.optimization is not None
 	assert result.optimization.evaluated_variant_count == 1536
 	assert result.optimization.selected_variant_id.startswith(
-		"operation_window_1_to_6__"
+		"operation_window_6_to_10__"
+	)
+	assert (
+		result.optimization.score.return_remnant_profile
+		== ReturnRemnantProfile.MAX_USEFUL_AREA
 	)
 	placed_part_numbers = [
 		part.part_number
@@ -741,8 +756,87 @@ def test_basis_reference_operation_refinement_keeps_13_sheets() -> None:
 		if sheet.production_cut_plan is not None
 	]
 
-	assert sum(metrics.cut_length_mm for metrics in production_metrics) == 212841.4
-	assert sum(metrics.pass_count for metrics in production_metrics) == 233
-	assert sum(metrics.strip_turn_count for metrics in production_metrics) == 94
-	assert sum(metrics.size_setting_count for metrics in production_metrics) == 154
+	assert result.metrics.return_remnant_count == 17
+	assert result.metrics.return_remnant_area_mm2 == pytest.approx(1_944_417.68)
+	assert sum(metrics.cut_length_mm for metrics in production_metrics) == 216706.2
+	assert sum(metrics.pass_count for metrics in production_metrics) == 235
+	assert sum(metrics.strip_turn_count for metrics in production_metrics) == 100
+	assert sum(metrics.size_setting_count for metrics in production_metrics) == 162
 	assert validate_cutting_result(result) == []
+
+
+def test_basis_reference_selects_distinct_long_and_compact_remnants() -> None:
+	expectations = {
+		ReturnRemnantProfile.LONG: {
+			"return_remnant_count": 13,
+			"return_remnant_area_mm2": 1_586_234.08,
+			"profile_value": 2770.0,
+			"cut_length_mm": 214167.2,
+			"pass_count": 203,
+			"strip_turn_count": 74,
+			"size_setting_count": 131,
+		},
+		ReturnRemnantProfile.COMPACT: {
+			"return_remnant_count": 18,
+			"return_remnant_area_mm2": 1_700_960.84,
+			"profile_value": 262_553.76,
+			"cut_length_mm": 216808.2,
+			"pass_count": 238,
+			"strip_turn_count": 100,
+			"size_setting_count": 161,
+		},
+	}
+
+	for profile, expected in expectations.items():
+		result = optimize_guillotine_cutting(
+			parts=build_basis_agt_3019_parts(),
+			sheets=build_basis_agt_3019_sheets(),
+			settings=build_basis_agt_3019_settings(),
+			return_remnant_settings=ReturnRemnantSettings(
+				value_profile=profile,
+			),
+		)
+
+		assert result.metrics.placed_part_count == 93
+		assert result.metrics.unplaced_part_count == 0
+		assert result.metrics.sheet_count == 13
+		assert result.optimization is not None
+		assert result.optimization.score.return_remnant_profile == profile
+		assert (
+			result.metrics.return_remnant_count
+			== expected["return_remnant_count"]
+		)
+		assert result.metrics.return_remnant_area_mm2 == pytest.approx(
+			expected["return_remnant_area_mm2"]
+		)
+		if profile == ReturnRemnantProfile.LONG:
+			assert (
+				result.optimization.score.longest_return_remnant_side_mm
+				== expected["profile_value"]
+			)
+		else:
+			assert (
+				result.optimization.score.largest_compact_square_area_mm2
+				== pytest.approx(expected["profile_value"])
+			)
+		assert result.optimization.score.cut_length_mm == pytest.approx(
+			expected["cut_length_mm"]
+		)
+		assert result.optimization.score.pass_count == expected["pass_count"]
+		assert (
+			result.optimization.score.strip_turn_count
+			== expected["strip_turn_count"]
+		)
+		assert (
+			result.optimization.score.size_setting_count
+			== expected["size_setting_count"]
+		)
+		assert validate_cutting_result(result) == []
+
+
+def _no_qualifying_return_remnants() -> ReturnRemnantSettings:
+	return ReturnRemnantSettings(
+		min_long_side_mm=10_000,
+		min_short_side_mm=0,
+		min_area_mm2=0,
+	)

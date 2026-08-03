@@ -27,6 +27,21 @@ def collect_return_remnants(
 	]
 
 
+def collect_cutting_result_return_remnants(
+	result: CuttingResult,
+	settings: ReturnRemnantSettings,
+) -> list[ReturnRemnant]:
+	return [
+		remnant
+		for sheet in result.sheets
+		for remnant in collect_return_remnants(
+			root=sheet.root,
+			sheet_name=sheet.sheet_name,
+			settings=settings,
+		)
+	]
+
+
 def meets_return_remnant_thresholds(
 	area: RectArea,
 	settings: ReturnRemnantSettings,

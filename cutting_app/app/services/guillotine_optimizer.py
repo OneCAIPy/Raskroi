@@ -100,6 +100,9 @@ def optimize_guillotine_cutting(
 	settings: CutSettings,
 	return_remnant_settings: ReturnRemnantSettings | None = None,
 ) -> CuttingResult:
+	effective_return_remnant_settings = (
+		return_remnant_settings or ReturnRemnantSettings()
+	)
 	variants = build_default_optimization_variants()
 	base_evaluated = [
 		EvaluatedCuttingVariant(
@@ -114,7 +117,11 @@ def optimize_guillotine_cutting(
 		)
 		for variant in variants
 	]
-	base_result = select_best_cutting_variant(base_evaluated)
+	base_result = select_best_cutting_variant(
+		base_evaluated,
+		return_remnant_settings=effective_return_remnant_settings,
+		prioritize_return_remnants=False,
+	)
 	local_evaluated = _build_local_rebuild_candidates(
 		parts=parts,
 		settings=settings,
@@ -123,7 +130,11 @@ def optimize_guillotine_cutting(
 		technical_order_start=len(base_evaluated),
 	)
 	capacity_evaluated = [*base_evaluated, *local_evaluated]
-	capacity_result = select_best_cutting_variant(capacity_evaluated)
+	capacity_result = select_best_cutting_variant(
+		capacity_evaluated,
+		return_remnant_settings=effective_return_remnant_settings,
+		prioritize_return_remnants=False,
+	)
 	operation_evaluated = _build_operation_refinement_candidates(
 		parts=parts,
 		settings=settings,
@@ -133,11 +144,12 @@ def optimize_guillotine_cutting(
 	)
 
 	selected_result = select_best_cutting_variant(
-		[*capacity_evaluated, *operation_evaluated]
+		[*capacity_evaluated, *operation_evaluated],
+		return_remnant_settings=effective_return_remnant_settings,
 	)
 	return attach_return_remnants(
 		selected_result,
-		return_remnant_settings or ReturnRemnantSettings(),
+		effective_return_remnant_settings,
 	)
 
 

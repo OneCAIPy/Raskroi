@@ -4,7 +4,10 @@ from urllib.parse import parse_qs
 from cutting_app.app.domain.cut_settings import CutSettings
 from cutting_app.app.domain.cut_tree import CutDirection
 from cutting_app.app.domain.cutting_result import CuttingResult
-from cutting_app.app.domain.return_remnant import ReturnRemnantSettings
+from cutting_app.app.domain.return_remnant import (
+	ReturnRemnantProfile,
+	ReturnRemnantSettings,
+)
 from cutting_app.app.domain.result_issue import ResultIssue
 from cutting_app.app.domain.sheet import SheetInput, SheetMargins
 from cutting_app.app.exporters import svg_exporter
@@ -30,6 +33,7 @@ class ManualCuttingFormData:
 	margin_bottom_mm: str
 	parts_text: str
 	initial_cut_direction: str = CutDirection.VERTICAL.value
+	return_remnant_profile: str = ReturnRemnantProfile.MAX_USEFUL_AREA.value
 	return_remnant_min_long_side_mm: str = "400"
 	return_remnant_min_short_side_mm: str = "80"
 	return_remnant_min_area_m2: str = "0.04"
@@ -67,6 +71,7 @@ def make_default_manual_cutting_form() -> ManualCuttingFormData:
 		margin_bottom_mm="10",
 		parts_text=DEFAULT_PARTS_TEXT,
 		initial_cut_direction=CutDirection.VERTICAL.value,
+		return_remnant_profile=ReturnRemnantProfile.MAX_USEFUL_AREA.value,
 		return_remnant_min_long_side_mm="400",
 		return_remnant_min_short_side_mm="80",
 		return_remnant_min_area_m2="0.04",
@@ -90,6 +95,11 @@ def manual_cutting_form_from_urlencoded_body(body: bytes) -> ManualCuttingFormDa
 			values,
 			"initial_cut_direction",
 			default_form.initial_cut_direction,
+		),
+		return_remnant_profile=_first(
+			values,
+			"return_remnant_profile",
+			default_form.return_remnant_profile,
 		),
 		return_remnant_min_long_side_mm=_first(
 			values,
@@ -197,10 +207,15 @@ def _parse_manual_form(form: ManualCuttingFormData) -> _ParsedManualForm:
 		min_value=0,
 		include_min=True,
 	)
+	return_remnant_profile = _parse_return_remnant_profile(
+		form.return_remnant_profile,
+		errors,
+	)
 	return_remnant_settings = _build_return_remnant_settings(
 		min_long_side_mm=return_remnant_min_long_side_mm,
 		min_short_side_mm=return_remnant_min_short_side_mm,
 		min_area_m2=return_remnant_min_area_m2,
+		value_profile=return_remnant_profile,
 		errors=errors,
 	)
 
@@ -226,6 +241,7 @@ def _build_return_remnant_settings(
 	min_long_side_mm: float,
 	min_short_side_mm: float,
 	min_area_m2: float,
+	value_profile: ReturnRemnantProfile,
 	errors: list[str],
 ) -> ReturnRemnantSettings | None:
 	if min_long_side_mm < min_short_side_mm:
@@ -238,6 +254,7 @@ def _build_return_remnant_settings(
 		min_long_side_mm=min_long_side_mm,
 		min_short_side_mm=min_short_side_mm,
 		min_area_mm2=min_area_m2 * 1_000_000,
+		value_profile=value_profile,
 	)
 
 
@@ -252,6 +269,19 @@ def _parse_initial_cut_direction(
 			"Первое направление резов: выбери вертикальное или горизонтальное."
 		)
 		return CutDirection.VERTICAL
+
+
+def _parse_return_remnant_profile(
+	value: str,
+	errors: list[str],
+) -> ReturnRemnantProfile:
+	try:
+		return ReturnRemnantProfile(value.strip().lower())
+	except ValueError:
+		errors.append(
+			"Профиль возвратного остатка: выбери максимальную полезную площадь, длинный или компактный остаток."
+		)
+		return ReturnRemnantProfile.MAX_USEFUL_AREA
 
 
 def _first(values: dict[str, list[str]], name: str, default: str) -> str:

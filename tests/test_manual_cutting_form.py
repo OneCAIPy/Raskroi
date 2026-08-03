@@ -1,5 +1,6 @@
 import pytest
 
+from cutting_app.app.domain.return_remnant import ReturnRemnantProfile
 from cutting_app.app.web.manual_cutting_form import (
 	ManualCuttingFormData,
 	build_manual_cutting_preview,
@@ -44,6 +45,7 @@ def test_manual_cutting_form_from_urlencoded_body_reads_posted_values() -> None:
 	body = (
 		"sheet_width_mm=1000&sheet_height_mm=800&sheet_quantity=2&kerf_width_mm=3&"
 		"initial_cut_direction=horizontal&"
+		"return_remnant_profile=long&"
 		"return_remnant_min_long_side_mm=450&return_remnant_min_short_side_mm=90&"
 		"return_remnant_min_area_m2=0%2C05&"
 		"margin_left_mm=1&margin_top_mm=2&margin_right_mm=3&margin_bottom_mm=4&"
@@ -55,11 +57,63 @@ def test_manual_cutting_form_from_urlencoded_body_reads_posted_values() -> None:
 	assert form.sheet_width_mm == "1000"
 	assert form.sheet_quantity == "2"
 	assert form.initial_cut_direction == "horizontal"
+	assert form.return_remnant_profile == "long"
 	assert form.return_remnant_min_long_side_mm == "450"
 	assert form.return_remnant_min_short_side_mm == "90"
 	assert form.return_remnant_min_area_m2 == "0,05"
 	assert form.margin_bottom_mm == "4"
 	assert form.parts_text == "A1; Part; 100; 50; 1"
+
+
+def test_manual_cutting_preview_passes_return_remnant_profile_to_optimizer() -> None:
+	default_form = make_default_manual_cutting_form()
+	form = ManualCuttingFormData(
+		sheet_width_mm=default_form.sheet_width_mm,
+		sheet_height_mm=default_form.sheet_height_mm,
+		sheet_quantity=default_form.sheet_quantity,
+		kerf_width_mm=default_form.kerf_width_mm,
+		margin_left_mm=default_form.margin_left_mm,
+		margin_top_mm=default_form.margin_top_mm,
+		margin_right_mm=default_form.margin_right_mm,
+		margin_bottom_mm=default_form.margin_bottom_mm,
+		parts_text=default_form.parts_text,
+		return_remnant_profile=ReturnRemnantProfile.COMPACT.value,
+	)
+
+	preview = build_manual_cutting_preview(form)
+
+	assert preview.input_errors == []
+	assert preview.result is not None
+	assert preview.result.optimization is not None
+	assert (
+		preview.result.optimization.score.return_remnant_profile
+		== ReturnRemnantProfile.COMPACT
+	)
+
+
+def test_manual_cutting_preview_reports_invalid_return_remnant_profile() -> None:
+	default_form = make_default_manual_cutting_form()
+	form = ManualCuttingFormData(
+		sheet_width_mm=default_form.sheet_width_mm,
+		sheet_height_mm=default_form.sheet_height_mm,
+		sheet_quantity=default_form.sheet_quantity,
+		kerf_width_mm=default_form.kerf_width_mm,
+		margin_left_mm=default_form.margin_left_mm,
+		margin_top_mm=default_form.margin_top_mm,
+		margin_right_mm=default_form.margin_right_mm,
+		margin_bottom_mm=default_form.margin_bottom_mm,
+		parts_text=default_form.parts_text,
+		return_remnant_profile="triangle",
+	)
+
+	preview = build_manual_cutting_preview(form)
+
+	assert preview.result is None
+	assert preview.svg is None
+	assert any(
+		"Профиль возвратного остатка" in error
+		for error in preview.input_errors
+	)
 
 
 def test_manual_cutting_preview_reports_invalid_initial_cut_direction() -> None:
@@ -139,13 +193,17 @@ def test_basis_reference_passes_through_extended_manual_input() -> None:
 	assert preview.result.edge_consumption.segment_count == 372
 	assert preview.result.edge_consumption.total_length_mm == 261526
 	assert preview.result.optimization is not None
-	assert preview.result.optimization.score.cut_length_mm == 212841.4
-	assert preview.result.optimization.score.pass_count == 233
-	assert preview.result.optimization.score.strip_turn_count == 94
-	assert preview.result.optimization.score.size_setting_count == 154
-	assert len(preview.result.return_remnants) == 16
-	assert preview.result.metrics.return_remnant_area_mm2 == pytest.approx(1_562_441.6)
+	assert (
+		preview.result.optimization.score.return_remnant_profile
+		== ReturnRemnantProfile.MAX_USEFUL_AREA
+	)
+	assert preview.result.optimization.score.cut_length_mm == 216706.2
+	assert preview.result.optimization.score.pass_count == 235
+	assert preview.result.optimization.score.strip_turn_count == 100
+	assert preview.result.optimization.score.size_setting_count == 162
+	assert len(preview.result.return_remnants) == 17
+	assert preview.result.metrics.return_remnant_area_mm2 == pytest.approx(1_944_417.68)
 	assert (
 		preview.result.metrics.material_utilization_with_return_remnants_percent
-		== pytest.approx(91.7950472887768)
+		== pytest.approx(92.65519879301026)
 	)

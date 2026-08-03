@@ -1,7 +1,10 @@
 import pytest
 
 from cutting_app.app.domain.cut_tree import CutDirection, CutLine, CutNode, RectArea
-from cutting_app.app.domain.return_remnant import ReturnRemnantSettings
+from cutting_app.app.domain.return_remnant import (
+	ReturnRemnantProfile,
+	ReturnRemnantSettings,
+)
 from cutting_app.app.services.return_remnant_calculator import (
 	collect_return_remnants,
 	meets_return_remnant_thresholds,
@@ -72,6 +75,15 @@ def test_return_remnant_threshold_boundaries_are_inclusive() -> None:
 			min_area_mm2=40_000,
 		),
 	)
+
+
+def test_return_remnant_settings_validate_and_normalize_profile() -> None:
+	settings = ReturnRemnantSettings(value_profile="long")
+
+	assert settings.value_profile == ReturnRemnantProfile.LONG
+
+	with pytest.raises(ValueError, match="профиль"):
+		ReturnRemnantSettings(value_profile="triangle")
 
 
 def test_basis_reference_has_17_return_remnants_with_expected_area() -> None:
