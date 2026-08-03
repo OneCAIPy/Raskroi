@@ -197,13 +197,13 @@ def test_basis_reference_passes_through_extended_manual_input() -> None:
 		preview.result.optimization.score.return_remnant_profile
 		== ReturnRemnantProfile.MAX_USEFUL_AREA
 	)
-	assert preview.result.optimization.score.cut_length_mm == 216706.2
-	assert preview.result.optimization.score.pass_count == 235
-	assert preview.result.optimization.score.strip_turn_count == 100
-	assert preview.result.optimization.score.size_setting_count == 162
+	assert preview.result.optimization.score.cut_length_mm == pytest.approx(216921.2)
+	assert preview.result.optimization.score.pass_count == 231
+	assert preview.result.optimization.score.strip_turn_count == 97
+	assert preview.result.optimization.score.size_setting_count == 161
 	assert len(preview.result.return_remnants) == 17
-	assert preview.result.metrics.return_remnant_area_mm2 == pytest.approx(1_944_417.68)
+	assert preview.result.metrics.return_remnant_area_mm2 == pytest.approx(2_083_414.56)
 	assert (
 		preview.result.metrics.material_utilization_with_return_remnants_percent
-		== pytest.approx(92.65519879301026)
+		== pytest.approx(92.96819843271483)
 	)

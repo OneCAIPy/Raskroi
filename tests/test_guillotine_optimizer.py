@@ -733,9 +733,9 @@ def test_basis_reference_max_area_profile_keeps_13_sheets() -> None:
 	assert round(result.metrics.material_utilization_percent, 2) == 88.28
 	assert round(result.metrics.working_area_efficiency_percent, 2) == 90.72
 	assert result.optimization is not None
-	assert result.optimization.evaluated_variant_count == 1536
+	assert result.optimization.evaluated_variant_count == 1540
 	assert result.optimization.selected_variant_id.startswith(
-		"operation_window_6_to_10__"
+		"multi_windows_1_to_5_6_to_10_12_to_13__"
 	)
 	assert (
 		result.optimization.score.return_remnant_profile
@@ -757,33 +757,35 @@ def test_basis_reference_max_area_profile_keeps_13_sheets() -> None:
 	]
 
 	assert result.metrics.return_remnant_count == 17
-	assert result.metrics.return_remnant_area_mm2 == pytest.approx(1_944_417.68)
-	assert sum(metrics.cut_length_mm for metrics in production_metrics) == 216706.2
-	assert sum(metrics.pass_count for metrics in production_metrics) == 235
-	assert sum(metrics.strip_turn_count for metrics in production_metrics) == 100
-	assert sum(metrics.size_setting_count for metrics in production_metrics) == 162
+	assert result.metrics.return_remnant_area_mm2 == pytest.approx(2_083_414.56)
+	assert sum(metrics.cut_length_mm for metrics in production_metrics) == pytest.approx(
+		216921.2
+	)
+	assert sum(metrics.pass_count for metrics in production_metrics) == 231
+	assert sum(metrics.strip_turn_count for metrics in production_metrics) == 97
+	assert sum(metrics.size_setting_count for metrics in production_metrics) == 161
 	assert validate_cutting_result(result) == []
 
 
 def test_basis_reference_selects_distinct_long_and_compact_remnants() -> None:
 	expectations = {
 		ReturnRemnantProfile.LONG: {
-			"return_remnant_count": 13,
-			"return_remnant_area_mm2": 1_586_234.08,
+			"return_remnant_count": 14,
+			"return_remnant_area_mm2": 1_651_280.56,
 			"profile_value": 2770.0,
-			"cut_length_mm": 214167.2,
-			"pass_count": 203,
-			"strip_turn_count": 74,
-			"size_setting_count": 131,
+			"cut_length_mm": 213721.6,
+			"pass_count": 201,
+			"strip_turn_count": 72,
+			"size_setting_count": 129,
 		},
 		ReturnRemnantProfile.COMPACT: {
 			"return_remnant_count": 18,
-			"return_remnant_area_mm2": 1_700_960.84,
+			"return_remnant_area_mm2": 1_993_818.6,
 			"profile_value": 262_553.76,
-			"cut_length_mm": 216808.2,
-			"pass_count": 238,
+			"cut_length_mm": 218736.8,
+			"pass_count": 234,
 			"strip_turn_count": 100,
-			"size_setting_count": 161,
+			"size_setting_count": 164,
 		},
 	}
 
@@ -801,6 +803,8 @@ def test_basis_reference_selects_distinct_long_and_compact_remnants() -> None:
 		assert result.metrics.unplaced_part_count == 0
 		assert result.metrics.sheet_count == 13
 		assert result.optimization is not None
+		assert result.optimization.evaluated_variant_count == 1540
+		assert result.optimization.selected_variant_id.startswith("multi_windows_")
 		assert result.optimization.score.return_remnant_profile == profile
 		assert (
 			result.metrics.return_remnant_count

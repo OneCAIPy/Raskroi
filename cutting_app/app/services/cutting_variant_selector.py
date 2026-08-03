@@ -16,6 +16,8 @@ class EvaluatedCuttingVariant:
 	variant_id: str
 	technical_order: int
 	result: CuttingResult
+	rebuilt_window_start: int | None = None
+	rebuilt_window_size: int | None = None
 
 
 def select_best_cutting_variant(
@@ -32,7 +34,7 @@ def select_best_cutting_variant(
 	evaluated = [
 		(
 			candidate,
-			_build_variant_score(
+			build_cutting_variant_score(
 				candidate,
 				effective_return_remnant_settings,
 				prioritize_return_remnants,
@@ -55,7 +57,7 @@ def select_best_cutting_variant(
 	)
 
 
-def _build_variant_score(
+def build_cutting_variant_score(
 	candidate: EvaluatedCuttingVariant,
 	return_remnant_settings: ReturnRemnantSettings,
 	prioritize_return_remnants: bool,

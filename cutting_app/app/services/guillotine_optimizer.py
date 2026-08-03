@@ -5,7 +5,6 @@ from cutting_app.app.domain.cut_settings import CutSettings
 from cutting_app.app.domain.cut_tree import CutDirection, CutLine, CutNode, RectArea
 from cutting_app.app.domain.cutting_result import (
 	ActualCut,
-	CuttingMetrics,
 	CuttingResult,
 	PlacedPart,
 	SheetCutMetrics,
@@ -37,9 +36,15 @@ from cutting_app.app.services.cutting_variant_selector import (
 	EvaluatedCuttingVariant,
 	select_best_cutting_variant,
 )
+from cutting_app.app.services.cutting_result_assembler import (
+	assemble_cutting_result,
+)
 from cutting_app.app.services.guillotine_optimization_variants import (
 	build_default_optimization_variants,
 	build_operation_refinement_variants,
+)
+from cutting_app.app.services.multi_window_variant_builder import (
+	build_multi_window_combination_candidates,
 )
 from cutting_app.app.services.placement_calculator import calculate_placed_dimensions
 from cutting_app.app.services.production_cut_plan_builder import build_production_cut_plan
@@ -142,9 +147,19 @@ def optimize_guillotine_cutting(
 		seed_result=capacity_result,
 		technical_order_start=len(capacity_evaluated),
 	)
+	multi_window_evaluated = build_multi_window_combination_candidates(
+		seed_result=capacity_result,
+		window_candidates=operation_evaluated,
+		return_remnant_settings=effective_return_remnant_settings,
+		technical_order_start=len(capacity_evaluated) + len(operation_evaluated),
+	)
 
 	selected_result = select_best_cutting_variant(
-		[*capacity_evaluated, *operation_evaluated],
+		[
+			*capacity_evaluated,
+			*operation_evaluated,
+			*multi_window_evaluated,
+		],
 		return_remnant_settings=effective_return_remnant_settings,
 	)
 	return attach_return_remnants(
@@ -219,15 +234,9 @@ def _optimize_part_units_variant(
 		if sheet.placed_parts
 	]
 
-	return CuttingResult(
+	return assemble_cutting_result(
 		sheets=sheet_results,
 		unplaced_parts=unplaced_parts,
-		metrics=_calculate_cutting_metrics(sheet_results, unplaced_parts),
-		edge_consumption=summarize_edge_segments(
-			segment
-			for sheet in sheet_results
-			for segment in sheet.edge_consumption.segments
-		),
 	)
 
 
@@ -418,6 +427,8 @@ def _build_operation_refinement_candidates(
 						),
 						technical_order=technical_order_start + len(candidates),
 						result=candidate_result,
+						rebuilt_window_start=window_start,
+						rebuilt_window_size=window_size,
 					)
 				)
 
@@ -495,15 +506,9 @@ def _combine_rebuilt_window(
 	]
 	unplaced_parts = rebuilt_window.unplaced_parts
 
-	return CuttingResult(
+	return assemble_cutting_result(
 		sheets=sheets,
 		unplaced_parts=unplaced_parts,
-		metrics=_calculate_cutting_metrics(sheets, unplaced_parts),
-		edge_consumption=summarize_edge_segments(
-			segment
-			for sheet in sheets
-			for segment in sheet.edge_consumption.segments
-		),
 	)
 
 
@@ -1203,36 +1208,6 @@ def _calculate_sheet_metrics(
 	kerf_area_mm2 = sum(_actual_cut_length(cut) * cut.kerf_width_mm for cut in actual_cuts)
 
 	return SheetCutMetrics(
-		sheet_area_mm2=sheet_area_mm2,
-		usable_area_mm2=usable_area_mm2,
-		placed_area_mm2=placed_area_mm2,
-		waste_area_mm2=waste_area_mm2,
-		kerf_area_mm2=kerf_area_mm2,
-		material_utilization_percent=calculate_material_utilization_percent(
-			placed_area_mm2=placed_area_mm2,
-			used_material_area_mm2=sheet_area_mm2,
-		),
-		working_area_efficiency_percent=calculate_working_area_efficiency_percent(
-			placed_area_mm2=placed_area_mm2,
-			working_area_mm2=usable_area_mm2,
-		),
-	)
-
-
-def _calculate_cutting_metrics(
-	sheets: list[SheetCutResult],
-	unplaced_parts: list[UnplacedPart],
-) -> CuttingMetrics:
-	sheet_area_mm2 = sum(sheet.metrics.sheet_area_mm2 for sheet in sheets)
-	usable_area_mm2 = sum(sheet.metrics.usable_area_mm2 for sheet in sheets)
-	placed_area_mm2 = sum(sheet.metrics.placed_area_mm2 for sheet in sheets)
-	waste_area_mm2 = sum(sheet.metrics.waste_area_mm2 for sheet in sheets)
-	kerf_area_mm2 = sum(sheet.metrics.kerf_area_mm2 for sheet in sheets)
-
-	return CuttingMetrics(
-		sheet_count=len(sheets),
-		placed_part_count=sum(len(sheet.placed_parts) for sheet in sheets),
-		unplaced_part_count=len(unplaced_parts),
 		sheet_area_mm2=sheet_area_mm2,
 		usable_area_mm2=usable_area_mm2,
 		placed_area_mm2=placed_area_mm2,
