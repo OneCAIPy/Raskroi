@@ -74,7 +74,9 @@ def _render_form(form: ManualCuttingFormData) -> str:
 
 	<fieldset>
 		<legend>Детали</legend>
-		<p class="hint">Формат строки: номер; название; L; W; количество</p>
+		<p class="hint">Старый формат: номер; название; L; W; количество</p>
+		<p class="hint">Расширенный формат: номер; название; L; W; количество; L1; L2; W1; W2</p>
+		<p class="hint">Кромка стороны: толщина|прифуговка|свес|материал. Пустое поле или «-» означает отсутствие кромки. Неуказанные прифуговка и свес равны нулю, материал можно не указывать.</p>
 		<textarea name="parts_text" rows="10">{escape(form.parts_text)}</textarea>
 	</fieldset>
 
@@ -122,6 +124,7 @@ def _render_metrics(preview: ManualCuttingPreview) -> str:
 
 	metrics = preview.result.metrics
 	edge_consumption = preview.result.edge_consumption
+	production_items = _render_production_metric_items(preview)
 	return f"""
 <ul>
 	<li>Листов использовано: {metrics.sheet_count}</li>
@@ -132,7 +135,54 @@ def _render_metrics(preview: ManualCuttingPreview) -> str:
 	<li>Длина кромки: {edge_consumption.base_length_mm / 1000:.3f} м</li>
 	<li>Длина кромки со свесом: {edge_consumption.total_length_mm / 1000:.3f} м</li>
 	<li>Отрезов кромки: {edge_consumption.segment_count}</li>
-</ul>"""
+	{production_items}
+</ul>
+{_render_edge_material_consumption(preview)}"""
+
+
+def _render_production_metric_items(preview: ManualCuttingPreview) -> str:
+	if preview.result is None or preview.result.optimization is None:
+		return ""
+
+	score = preview.result.optimization.score
+	return f"""
+	<li>Длина проходов: {score.cut_length_mm / 1000:.4f} м</li>
+	<li>Количество проходов: {score.pass_count}</li>
+	<li>Поворотов полос: {score.strip_turn_count}</li>
+	<li>Установок размеров: {score.size_setting_count}</li>"""
+
+
+def _render_edge_material_consumption(preview: ManualCuttingPreview) -> str:
+	if preview.result is None or not preview.result.edge_consumption.by_material:
+		return ""
+
+	rows = "".join(
+		f"""
+	<tr>
+		<td>{escape(item.material_name or "Не указан")}</td>
+		<td>{item.thickness_mm:g}</td>
+		<td>{item.segment_count}</td>
+		<td>{item.base_length_mm / 1000:.3f}</td>
+		<td>{item.overhang_length_mm / 1000:.3f}</td>
+		<td>{item.total_length_mm / 1000:.3f}</td>
+	</tr>"""
+		for item in preview.result.edge_consumption.by_material
+	)
+	return f"""
+<h3>Расход кромки по материалам</h3>
+<table>
+	<thead>
+		<tr>
+			<th>Материал</th>
+			<th>Толщина, мм</th>
+			<th>Отрезов</th>
+			<th>Базовая длина, м</th>
+			<th>Свес, м</th>
+			<th>Всего, м</th>
+		</tr>
+	</thead>
+	<tbody>{rows}</tbody>
+</table>"""
 
 
 def _render_issues(preview: ManualCuttingPreview) -> str:
@@ -197,6 +247,16 @@ def _render_styles() -> str:
 		border: 1px solid #bbb;
 		border-radius: 6px;
 		font-family: Consolas, monospace;
+	}
+	table {
+		border-collapse: collapse;
+		margin: 12px 0 20px;
+	}
+	th,
+	td {
+		padding: 7px 10px;
+		border: 1px solid #ccc;
+		text-align: left;
 	}
 	button {
 		padding: 10px 18px;

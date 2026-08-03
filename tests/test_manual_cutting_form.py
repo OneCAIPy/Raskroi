@@ -4,6 +4,7 @@ from cutting_app.app.web.manual_cutting_form import (
 	make_default_manual_cutting_form,
 	manual_cutting_form_from_urlencoded_body,
 )
+from tests.basis_agt_3019_fixture import BASIS_AGT_3019_PARTS
 
 
 def test_manual_cutting_preview_builds_svg_for_valid_form() -> None:
@@ -74,3 +75,38 @@ def test_manual_cutting_preview_reports_invalid_initial_cut_direction() -> None:
 	assert preview.result is None
 	assert preview.svg is None
 	assert any("Первое направление" in error for error in preview.input_errors)
+
+
+def test_basis_reference_passes_through_extended_manual_input() -> None:
+	edge = "1|0,5|0|3019 АГТ Кромка Abs 22*1"
+	parts_text = "\n".join(
+		f"{position}; Позиция {position}; {l_mm}; {w_mm}; {quantity}; "
+		f"{edge}; {edge}; {edge}; {edge}"
+		for position, l_mm, w_mm, quantity in BASIS_AGT_3019_PARTS
+	)
+	form = ManualCuttingFormData(
+		sheet_width_mm="2800",
+		sheet_height_mm="1220",
+		sheet_quantity="20",
+		kerf_width_mm="4,4",
+		margin_left_mm="15",
+		margin_top_mm="10",
+		margin_right_mm="15",
+		margin_bottom_mm="10",
+		parts_text=parts_text,
+	)
+
+	preview = build_manual_cutting_preview(form)
+
+	assert preview.input_errors == []
+	assert preview.issues == []
+	assert preview.result is not None
+	assert preview.result.metrics.placed_part_count == 93
+	assert preview.result.metrics.sheet_count == 13
+	assert preview.result.edge_consumption.segment_count == 372
+	assert preview.result.edge_consumption.total_length_mm == 261526
+	assert preview.result.optimization is not None
+	assert preview.result.optimization.score.cut_length_mm == 212841.4
+	assert preview.result.optimization.score.pass_count == 233
+	assert preview.result.optimization.score.strip_turn_count == 94
+	assert preview.result.optimization.score.size_setting_count == 154
