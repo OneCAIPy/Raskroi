@@ -59,6 +59,8 @@ class SheetCutMetrics:
 @dataclass(frozen=True)
 class CuttingMetrics:
 	sheet_count: int = 0
+	standard_sheet_count: int = 0
+	input_remnant_count: int = 0
 	placed_part_count: int = 0
 	unplaced_part_count: int = 0
 	sheet_area_mm2: float = 0

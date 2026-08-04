@@ -26,12 +26,20 @@ def assemble_cutting_result(
 	placed_area_mm2 = sum(sheet.metrics.placed_area_mm2 for sheet in sheet_list)
 	waste_area_mm2 = sum(sheet.metrics.waste_area_mm2 for sheet in sheet_list)
 	kerf_area_mm2 = sum(sheet.metrics.kerf_area_mm2 for sheet in sheet_list)
+	standard_sheet_count = sum(
+		1
+		for sheet in sheet_list
+		if not sheet.sheet_is_remnant
+	)
+	input_remnant_count = len(sheet_list) - standard_sheet_count
 
 	return CuttingResult(
 		sheets=sheet_list,
 		unplaced_parts=unplaced_part_list,
 		metrics=CuttingMetrics(
 			sheet_count=len(sheet_list),
+			standard_sheet_count=standard_sheet_count,
+			input_remnant_count=input_remnant_count,
 			placed_part_count=sum(len(sheet.placed_parts) for sheet in sheet_list),
 			unplaced_part_count=len(unplaced_part_list),
 			sheet_area_mm2=sheet_area_mm2,

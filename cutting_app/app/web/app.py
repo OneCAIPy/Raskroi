@@ -1,17 +1,31 @@
+from dataclasses import replace
 from html import escape
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse, Response
 
 from cutting_app.app.examples.demo_cutting_orders import list_demo_cutting_orders
+from cutting_app.app.importers.parts_xlsx_importer import (
+	PartsXlsxImportError,
+	import_parts_xlsx,
+)
 from cutting_app.app.web.sample_preview import WebSvgPreview, build_sample_svg_preview
 
 from cutting_app.app.web.manual_cutting_form import (
 	build_manual_cutting_preview,
+	build_manual_cutting_rows_validation,
 	make_default_manual_cutting_form,
 	manual_cutting_form_from_urlencoded_body,
 )
 from cutting_app.app.web.manual_cutting_form_page import render_manual_cutting_form_page
+from cutting_app.app.web.multipart_form_parser import (
+	MultipartFormError,
+	read_uploaded_file,
+)
+
+
+_MAX_XLSX_FILE_SIZE_BYTES = 10 * 1024 * 1024
+_MAX_XLSX_REQUEST_SIZE_BYTES = _MAX_XLSX_FILE_SIZE_BYTES + 1024 * 1024
 
 
 def create_app() -> FastAPI:
@@ -51,7 +65,93 @@ def create_app() -> FastAPI:
 		preview = build_manual_cutting_preview(form)
 		return HTMLResponse(content=render_manual_cutting_form_page(form, preview))
 
+	@app.post("/manual/import-xlsx", response_class=HTMLResponse)
+	async def import_manual_cutting_xlsx(request: Request) -> HTMLResponse:
+		body = await request.body()
+		if len(body) > _MAX_XLSX_REQUEST_SIZE_BYTES:
+			return _render_xlsx_import_error(
+				"Файл XLSX слишком большой. Максимальный размер — 10 МБ."
+			)
+
+		try:
+			uploaded_file = read_uploaded_file(
+				body=body,
+				content_type=request.headers.get("content-type", ""),
+				field_name="parts_xlsx",
+			)
+		except MultipartFormError as error:
+			return _render_xlsx_import_error(str(error))
+
+		filename = uploaded_file.filename.replace("\\", "/").split("/")[-1]
+		if not filename.lower().endswith(".xlsx"):
+			return _render_xlsx_import_error(
+				"Поддерживается только формат .xlsx.",
+				filename=filename,
+			)
+		if not uploaded_file.contents:
+			return _render_xlsx_import_error(
+				"Загруженный файл пуст.",
+				filename=filename,
+			)
+		if len(uploaded_file.contents) > _MAX_XLSX_FILE_SIZE_BYTES:
+			return _render_xlsx_import_error(
+				"Файл XLSX слишком большой. Максимальный размер — 10 МБ.",
+				filename=filename,
+			)
+
+		import_result = import_parts_xlsx(
+			uploaded_file.contents,
+			filename=filename,
+		)
+		form = replace(
+			make_default_manual_cutting_form(),
+			parts_text="",
+			part_rows=tuple(import_result.rows),
+			imported_file_name=import_result.filename,
+			imported_sheet_name=import_result.sheet_name,
+			imported_skipped_row_count=str(import_result.skipped_row_count),
+		)
+		preview = build_manual_cutting_rows_validation(
+			form,
+			additional_errors=[
+				_format_xlsx_import_error(error)
+				for error in import_result.errors
+			],
+			additional_row_error_numbers=[
+				error.table_row_number
+				for error in import_result.errors
+				if error.table_row_number is not None
+			],
+		)
+		return HTMLResponse(
+			content=render_manual_cutting_form_page(form, preview)
+		)
+
 	return app
+
+
+def _render_xlsx_import_error(
+	message: str,
+	*,
+	filename: str = "",
+) -> HTMLResponse:
+	form = replace(
+		make_default_manual_cutting_form(),
+		parts_text="",
+		part_rows=(),
+		imported_file_name=filename,
+	)
+	preview = build_manual_cutting_rows_validation(
+		form,
+		additional_errors=[message],
+	)
+	return HTMLResponse(content=render_manual_cutting_form_page(form, preview))
+
+
+def _format_xlsx_import_error(error: PartsXlsxImportError) -> str:
+	if error.excel_row_number is None:
+		return error.message
+	return f"Excel, строка {error.excel_row_number}: {error.message}"
 
 
 def _build_preview_or_404(order_slug: str) -> WebSvgPreview:

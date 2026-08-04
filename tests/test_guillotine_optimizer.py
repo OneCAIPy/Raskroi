@@ -93,6 +93,25 @@ def test_remnant_sheet_is_used_before_standard_sheet():
 	assert result.sheets[0].sheet_stock_name == "Остаток"
 	assert result.sheets[0].sheet_is_remnant is True
 	assert result.sheets[0].placed_parts[0].sheet_name == "Остаток"
+	assert result.metrics.standard_sheet_count == 0
+	assert result.metrics.input_remnant_count == 1
+
+
+def test_remnant_stock_is_exhausted_before_standard_stock() -> None:
+	result = optimize_guillotine_cutting(
+		parts=[_part("1", 400, 400, quantity=4)],
+		sheets=[
+			SheetInput(name="Стандарт", width_mm=1000, height_mm=1000, quantity=2),
+			SheetInput(name="Кусок 1000×500", width_mm=1000, height_mm=500, is_remnant=True),
+			SheetInput(name="Кусок 500×500", width_mm=500, height_mm=500, is_remnant=True),
+		],
+		settings=CutSettings(kerf_width_mm=4),
+	)
+
+	assert result.metrics.placed_part_count == 4
+	assert result.metrics.input_remnant_count == 2
+	assert result.metrics.standard_sheet_count == 1
+	assert [sheet.sheet_is_remnant for sheet in result.sheets] == [True, True, False]
 
 
 def test_placement_respects_sheet_margins():
